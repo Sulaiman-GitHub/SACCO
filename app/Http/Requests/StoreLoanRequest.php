@@ -58,6 +58,8 @@ class StoreLoanRequest extends FormRequest
         return [
             'member_id.exists' => 'The selected member was not found in your SACCO.',
             'principal.min' => 'The minimum loan principal is UGX 10,000.',
+            'interest_rate.min' => 'The interest rate cannot be negative.',
+            'interest_rate.max' => 'The interest rate cannot be more than 100%.',
             'applied_at.before_or_equal' => 'The application date cannot be in the future.',
             'term_months.min' => 'Loan term must be at least 1 month.',
             'term_months.max' => 'Loan term cannot exceed 120 months (10 years).',

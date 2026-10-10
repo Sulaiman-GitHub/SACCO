@@ -90,6 +90,8 @@ class UpdateMemberRequest extends FormRequest
     {
         return [
             'national_id_hash.unique' => 'A member with this National ID (NIN) is already registered in this SACCO.',
+            'monthly_income.numeric' => 'Monthly income must be a number.',
+            'monthly_income.min' => 'Monthly income cannot be negative.',
             'member_number.unique' => 'This Member Number is already in use within your SACCO.',
         ];
     }

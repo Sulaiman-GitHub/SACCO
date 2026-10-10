@@ -94,7 +94,7 @@ class TenantLoanController extends Controller
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'member_number', 'phone']);
 
-        $nextReference = Loan::generateReference($saccoId);
+        $nextReference = Loan::previewReference($saccoId);
 
         return view('tenant.loans.create', compact('members', 'selectedMember', 'nextReference'));
     }

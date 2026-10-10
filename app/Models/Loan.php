@@ -512,20 +512,20 @@ class Loan extends Model
     }
 
     /**
-     * Generate unique sequential loan reference per SACCO.
+     * Reserve the next loan reference for a SACCO. Call inside the saving transaction.
      * Example: LN-2026-00001
      */
     public static function generateReference(int $saccoId): string
     {
-        $year = date('Y');
-        $last = static::withoutTenantScope()
-            ->where('sacco_id', $saccoId)
-            ->latest('id')
-            ->first();
+        return sprintf('LN-%s-%05d', date('Y'), DocumentSequence::next($saccoId, 'loan'));
+    }
 
-        $nextSeq = $last ? ((int) $last->id + 1) : 1;
-
-        return sprintf('LN-%s-%05d', $year, $nextSeq);
+    /**
+     * The reference the next loan will probably get (display only, not reserved).
+     */
+    public static function previewReference(int $saccoId): string
+    {
+        return sprintf('LN-%s-%05d', date('Y'), DocumentSequence::peek($saccoId, 'loan'));
     }
 
     /**

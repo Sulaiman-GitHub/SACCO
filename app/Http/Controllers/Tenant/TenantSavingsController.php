@@ -10,7 +10,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TenantSavingsController extends Controller
@@ -97,7 +96,7 @@ class TenantSavingsController extends Controller
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'member_number', 'phone']);
 
-        $nextReference = Saving::generateReference($saccoId);
+        $nextReference = Saving::previewReference($saccoId);
 
         return view('tenant.savings.create', compact('members', 'selectedMember', 'nextReference'));
     }
@@ -110,22 +109,7 @@ class TenantSavingsController extends Controller
         $validated = $request->validated();
         $saccoId = (int) Auth::user()->sacco_id;
 
-        $saving = DB::transaction(function () use ($validated, $saccoId) {
-            $reference = Saving::generateReference($saccoId);
-
-            return Saving::create([
-                'sacco_id' => $saccoId,
-                'member_id' => $validated['member_id'],
-                'transaction_reference' => $reference,
-                'type' => $validated['type'],
-                'amount' => $validated['amount'],
-                'payment_method' => $validated['payment_method'],
-                'payment_reference' => $validated['payment_reference'] ?? null,
-                'transaction_date' => $validated['transaction_date'],
-                'recorded_by' => Auth::id(),
-                'notes' => $validated['notes'] ?? null,
-            ]);
-        });
+        $saving = Saving::recordLocked($validated, $saccoId, Auth::id());
 
         $actionLabel = $saving->isDeposit() ? 'Deposit' : 'Withdrawal';
 

@@ -57,7 +57,7 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light font-monospace">UGX</span>
-                            <input type="number" step="1000" min="1000" name="amount" id="amount"
+                            <input type="number" step="any" name="amount" id="amount"
                                    class="form-control @error('amount') is-invalid @enderror"
                                    placeholder="e.g. 250000"
                                    value="{{ old('amount') }}" required>

@@ -182,7 +182,7 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light" style="font-size: 12px;">UGX</span>
-                            <input type="number" step="1000" id="monthly_income" name="monthly_income" class="form-control @error('monthly_income') is-invalid @enderror" placeholder="e.g. 1500000" value="{{ old('monthly_income') }}">
+                            <input type="number" step="any" id="monthly_income" name="monthly_income" class="form-control @error('monthly_income') is-invalid @enderror" placeholder="e.g. 1500000" value="{{ old('monthly_income') }}">
                         </div>
                         @error('monthly_income')
                             <div class="invalid-feedback">{{ $message }}</div>

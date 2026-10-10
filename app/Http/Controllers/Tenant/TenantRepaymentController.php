@@ -10,7 +10,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TenantRepaymentController extends Controller
@@ -91,7 +90,7 @@ class TenantRepaymentController extends Controller
             ->filter(fn (Loan $l) => $l->remaining_balance > 0)
             ->values();
 
-        $nextReference = Repayment::generateReference($saccoId);
+        $nextReference = Repayment::previewReference($saccoId);
 
         return view('tenant.repayments.create', compact('loans', 'selectedLoan', 'nextReference'));
     }
@@ -104,29 +103,7 @@ class TenantRepaymentController extends Controller
         $validated = $request->validated();
         $saccoId = (int) Auth::user()->sacco_id;
 
-        $repayment = DB::transaction(function () use ($validated, $saccoId) {
-            $loan = Loan::findOrFail($validated['loan_id']);
-            $reference = Repayment::generateReference($saccoId);
-
-            $rep = Repayment::create([
-                'sacco_id' => $saccoId,
-                'loan_id' => $loan->id,
-                'member_id' => $loan->member_id,
-                'repayment_reference' => $reference,
-                'amount' => $validated['amount'],
-                'payment_method' => $validated['payment_method'],
-                'payment_reference' => $validated['payment_reference'] ?? null,
-                'repayment_date' => $validated['repayment_date'],
-                'recorded_by' => Auth::id(),
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            // Refresh the loan balance and status (e.g. auto-close when balance reaches 0)
-            $loan->refresh();
-            $loan->refreshStatus();
-
-            return $rep;
-        });
+        $repayment = Repayment::recordLocked($validated, $saccoId, Auth::id());
 
         $loan = $repayment->loan;
         $statusNote = $loan->isClosed() ? ' The loan is now FULLY REPAID and closed!' : ' Remaining balance: UGX '.number_format($loan->remaining_balance, 2);

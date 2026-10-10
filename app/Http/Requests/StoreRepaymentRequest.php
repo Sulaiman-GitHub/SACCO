@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Loan;
+use App\Models\Repayment;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -35,7 +36,7 @@ class StoreRepaymentRequest extends FormRequest
                 'integer',
                 Rule::exists('loans', 'id')->where('sacco_id', $saccoId),
             ],
-            'amount' => ['required', 'numeric', 'min:1000'],
+            'amount' => ['required', 'numeric', 'gt:0'],
             'payment_method' => ['required', 'string', Rule::in(['cash', 'mtn_momo', 'airtel_money', 'bank_transfer', 'other'])],
             'payment_reference' => ['nullable', 'string', 'max:100'],
             'repayment_date' => ['required', 'date', 'before_or_equal:today'],
@@ -52,7 +53,9 @@ class StoreRepaymentRequest extends FormRequest
     {
         return [
             'loan_id.exists' => 'The selected loan was not found in your SACCO.',
-            'amount.min' => 'The minimum repayment installment is UGX 1,000.',
+            'amount.required' => 'Enter the repayment amount.',
+            'amount.numeric' => 'The repayment amount must be a number.',
+            'amount.gt' => 'The repayment amount must be more than zero.',
             'repayment_date.before_or_equal' => 'Repayment date cannot be in the future.',
         ];
     }
@@ -84,6 +87,8 @@ class StoreRepaymentRequest extends FormRequest
             $remaining = $loan->remaining_balance;
             if ($amount > ($remaining + 0.01)) {
                 $validator->errors()->add('amount', 'Repayment amount (UGX '.number_format($amount, 2).') cannot exceed the remaining loan balance of UGX '.number_format($remaining, 2).'.');
+            } elseif (! Repayment::meetsMinimum($amount, $remaining)) {
+                $validator->errors()->add('amount', 'The minimum repayment is UGX '.number_format(Repayment::MINIMUM_AMOUNT).', unless you are paying off the full remaining balance of UGX '.number_format($remaining, 2).'.');
             }
         });
     }

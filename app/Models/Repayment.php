@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 class Repayment extends Model
@@ -104,21 +106,89 @@ class Repayment extends Model
         return $this->belongsTo(User::class, 'recorded_by');
     }
 
+    public const MINIMUM_AMOUNT = 1000;
+
     /**
-     * Generate unique sequential repayment reference per SACCO.
+     * A partial repayment must be at least the minimum; paying exactly the
+     * remaining balance is always allowed, however small.
+     */
+    public static function meetsMinimum(float $amount, float $remainingBalance): bool
+    {
+        return $amount >= self::MINIMUM_AMOUNT || abs($amount - $remainingBalance) < 0.005;
+    }
+
+    /**
+     * Record a repayment under a lock on the loan row. The balance checks run
+     * again inside the lock, so overlapping requests cannot overpay the loan.
+     *
+     * @param  array<string, mixed>  $data  Validated request data (loan_id, amount, payment_method, repayment_date, ...)
+     *
+     * @throws ValidationException
+     */
+    public static function recordLocked(array $data, int $saccoId, ?int $recordedBy): self
+    {
+        return DB::transaction(function () use ($data, $saccoId, $recordedBy) {
+            $loan = Loan::withoutTenantScope()
+                ->where('sacco_id', $saccoId)
+                ->lockForUpdate()
+                ->findOrFail($data['loan_id']);
+
+            $amount = (float) $data['amount'];
+
+            if (! $loan->canAcceptRepayment()) {
+                throw ValidationException::withMessages([
+                    'loan_id' => "This loan (status: {$loan->status}) is not active or has already been fully repaid.",
+                ]);
+            }
+
+            $remaining = $loan->remaining_balance;
+            if ($amount > $remaining + 0.01) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Repayment amount (UGX '.number_format($amount, 2).') cannot exceed the remaining loan balance of UGX '.number_format($remaining, 2).'.',
+                ]);
+            }
+            if (! self::meetsMinimum($amount, $remaining)) {
+                throw ValidationException::withMessages([
+                    'amount' => 'The minimum repayment is UGX '.number_format(self::MINIMUM_AMOUNT).', unless you are paying off the full remaining balance of UGX '.number_format($remaining, 2).'.',
+                ]);
+            }
+
+            $repayment = static::create([
+                'sacco_id' => $saccoId,
+                'loan_id' => $loan->id,
+                'member_id' => $loan->member_id,
+                'repayment_reference' => self::generateReference($saccoId),
+                'amount' => $data['amount'],
+                'payment_method' => $data['payment_method'],
+                'payment_reference' => $data['payment_reference'] ?? null,
+                'repayment_date' => $data['repayment_date'],
+                'recorded_by' => $recordedBy,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            // Refresh the loan balance and status (e.g. auto-close when balance reaches 0)
+            $loan->refresh();
+            $loan->refreshStatus();
+
+            return $repayment;
+        });
+    }
+
+    /**
+     * Reserve the next repayment reference for a SACCO. Call inside the saving transaction.
      * Example: REP-2026-00001
      */
     public static function generateReference(int $saccoId): string
     {
-        $year = date('Y');
-        $last = static::withoutTenantScope()
-            ->where('sacco_id', $saccoId)
-            ->latest('id')
-            ->first();
+        return sprintf('REP-%s-%05d', date('Y'), DocumentSequence::next($saccoId, 'repayment'));
+    }
 
-        $nextSeq = $last ? ((int) $last->id + 1) : 1;
-
-        return sprintf('REP-%s-%05d', $year, $nextSeq);
+    /**
+     * The reference the next repayment will probably get (display only, not reserved).
+     */
+    public static function previewReference(int $saccoId): string
+    {
+        return sprintf('REP-%s-%05d', date('Y'), DocumentSequence::peek($saccoId, 'repayment'));
     }
 
     /**

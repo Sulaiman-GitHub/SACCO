@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 class Saving extends Model
@@ -112,20 +114,89 @@ class Saving extends Model
         return $this->type === 'withdrawal';
     }
 
+    public const MINIMUM_AMOUNT = 1000;
+
     /**
-     * Generate next transaction sequence reference for a given SACCO.
+     * A partial withdrawal must be at least the minimum; withdrawing exactly
+     * the full balance is always allowed, however small.
+     */
+    public static function meetsMinimum(float $amount, float $balance): bool
+    {
+        return $amount >= self::MINIMUM_AMOUNT || abs($amount - $balance) < 0.005;
+    }
+
+    /**
+     * Record a deposit or withdrawal under a lock on the member row. The
+     * balance checks run again inside the lock, so overlapping withdrawals
+     * cannot overdraw the account.
+     *
+     * @param  array<string, mixed>  $data  Validated request data (member_id, type, amount, payment_method, transaction_date, ...)
+     *
+     * @throws ValidationException
+     */
+    public static function recordLocked(array $data, int $saccoId, ?int $recordedBy): self
+    {
+        return DB::transaction(function () use ($data, $saccoId, $recordedBy) {
+            $member = Member::withoutTenantScope()
+                ->where('sacco_id', $saccoId)
+                ->lockForUpdate()
+                ->findOrFail($data['member_id']);
+
+            $amount = (float) $data['amount'];
+
+            if (! $member->isActive()) {
+                throw ValidationException::withMessages([
+                    'member_id' => "Savings transactions can only be recorded for active members (current status: {$member->status}).",
+                ]);
+            }
+
+            if ($data['type'] === 'withdrawal') {
+                $balance = $member->savings_balance;
+                if ($amount > $balance) {
+                    throw ValidationException::withMessages([
+                        'amount' => 'Insufficient savings balance. Member has UGX '.number_format($balance, 2).' available for withdrawal.',
+                    ]);
+                }
+                if (! self::meetsMinimum($amount, $balance)) {
+                    throw ValidationException::withMessages([
+                        'amount' => 'The minimum withdrawal is UGX '.number_format(self::MINIMUM_AMOUNT).', unless you are withdrawing the member\'s full balance of UGX '.number_format($balance, 2).'.',
+                    ]);
+                }
+            } elseif ($amount < self::MINIMUM_AMOUNT) {
+                throw ValidationException::withMessages([
+                    'amount' => 'The minimum deposit is UGX '.number_format(self::MINIMUM_AMOUNT).'.',
+                ]);
+            }
+
+            return static::create([
+                'sacco_id' => $saccoId,
+                'member_id' => $member->id,
+                'transaction_reference' => self::generateReference($saccoId),
+                'type' => $data['type'],
+                'amount' => $data['amount'],
+                'payment_method' => $data['payment_method'],
+                'payment_reference' => $data['payment_reference'] ?? null,
+                'transaction_date' => $data['transaction_date'],
+                'recorded_by' => $recordedBy,
+                'notes' => $data['notes'] ?? null,
+            ]);
+        });
+    }
+
+    /**
+     * Reserve the next transaction reference for a SACCO. Call inside the saving transaction.
      */
     public static function generateReference(int $saccoId): string
     {
-        $year = date('Y');
-        $last = static::withoutTenantScope()
-            ->where('sacco_id', $saccoId)
-            ->latest('id')
-            ->first();
+        return sprintf('SAV-%s-%05d', date('Y'), DocumentSequence::next($saccoId, 'saving'));
+    }
 
-        $nextSeq = $last ? ((int) $last->id + 1) : 1;
-
-        return sprintf('SAV-%s-%05d', $year, $nextSeq);
+    /**
+     * The reference the next transaction will probably get (display only, not reserved).
+     */
+    public static function previewReference(int $saccoId): string
+    {
+        return sprintf('SAV-%s-%05d', date('Y'), DocumentSequence::peek($saccoId, 'saving'));
     }
 
     /**

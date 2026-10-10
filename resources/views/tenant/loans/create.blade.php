@@ -56,7 +56,7 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light font-monospace">UGX</span>
-                            <input type="number" step="5000" min="10000" name="principal" id="principal"
+                            <input type="number" step="any" name="principal" id="principal"
                                    class="form-control @error('principal') is-invalid @enderror"
                                    placeholder="e.g. 1500000"
                                    value="{{ old('principal', '1000000') }}" required>
@@ -71,7 +71,7 @@
                             Interest Rate (% p.a.) <span class="text-danger">*</span>
                         </label>
                         <div class="input-group">
-                            <input type="number" step="0.5" min="0" max="100" name="interest_rate" id="interest_rate"
+                            <input type="number" step="any" name="interest_rate" id="interest_rate"
                                    class="form-control @error('interest_rate') is-invalid @enderror"
                                    value="{{ old('interest_rate', '10.0') }}" required>
                             <span class="input-group-text bg-light">%</span>

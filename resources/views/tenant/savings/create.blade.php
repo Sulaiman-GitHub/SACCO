@@ -96,7 +96,7 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light fw-bold" style="font-size: 12px;">UGX</span>
-                            <input type="number" step="500" min="1000" id="amount" name="amount" class="form-control font-monospace @error('amount') is-invalid @enderror" placeholder="50000" value="{{ old('amount') }}" required>
+                            <input type="number" step="any" id="amount" name="amount" class="form-control font-monospace @error('amount') is-invalid @enderror" placeholder="50000" value="{{ old('amount') }}" required>
                         </div>
                         @error('amount')
                             <div class="text-danger mt-1" style="font-size: 12px;">{{ $message }}</div>
