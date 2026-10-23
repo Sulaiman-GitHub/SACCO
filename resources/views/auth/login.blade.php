@@ -169,7 +169,7 @@
     </div>
 
     <div class="login-footer">
-        Powered by Fat Tech Computer World · Demo
+        Powered by Fat Tech Computer World
     </div>
 </div>
 
