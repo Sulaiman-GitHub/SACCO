@@ -311,6 +311,10 @@
             background-color: #FBFBFC;
         }
 
+        /* Pagination */
+        .pagination { --bs-pagination-color: var(--color-black); --bs-pagination-hover-color: var(--color-black); --bs-pagination-focus-color: var(--color-black); --bs-pagination-active-bg: var(--color-black); --bs-pagination-active-border-color: var(--color-black); --bs-pagination-border-color: var(--color-border); flex-wrap: wrap; margin-bottom: 0; }
+        .pagination .page-item.active .page-link { background-color: var(--color-black); border-color: var(--color-black); color: #FFFFFF; }
+
         /* Badges */
         .badge-active {
             background-color: rgba(31, 174, 92, 0.15);
