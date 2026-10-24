@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In — SACCO Credit Risk & Business Management Platform</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+    @include('partials.pwa-head')
 
     <style>
         :root {
@@ -29,6 +30,9 @@
             justify-content: center;
             padding: 24px;
         }
+
+        /* The page body is a centring flex row, so the offline banner is pinned instead of joining the row. */
+        .offline-banner { position: fixed; top: 0; left: 0; right: 0; }
 
         .login-container {
             width: 100%;
@@ -162,7 +166,7 @@
                 </label>
             </div>
 
-            <button type="submit" class="btn btn-submit">
+            <button type="submit" class="btn btn-submit" data-busy-label="Signing in...">
                 Sign In
             </button>
         </form>
@@ -172,6 +176,8 @@
         Powered by Fat Tech Computer World
     </div>
 </div>
+
+@include('partials.pwa-scripts')
 
 </body>
 </html>

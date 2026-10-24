@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'My Account') — Member Portal</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+    @include('partials.pwa-head')
 
     <style>
         :root {
@@ -177,6 +178,9 @@
             </form>
         @endif
     </div>
+    @if($portalMember)
+        <div class="container pb-2">@include('partials.pwa-install')</div>
+    @endif
 </header>
 
 <main class="container portal-main">
@@ -211,5 +215,6 @@
         <a href="{{ route('portal.password.edit') }}" class="{{ request()->routeIs('portal.password.*') ? 'active' : '' }}"><i class="bi bi-key"></i>Password</a>
     </nav>
 @endif
+@include('partials.pwa-scripts')
 </body>
 </html>

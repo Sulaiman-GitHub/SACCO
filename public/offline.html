@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0F172A">
+    <title>You're offline</title>
+    <style>
+        :root { --color-black: #0F172A; --color-green-start: #1FAE5C; --color-green-end: #2FD98A; --color-bg: #F5F6F7; --color-slate: #4A5058; --color-border: #D8DCE0; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+            background: var(--color-bg); color: var(--color-black);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .card { width: 100%; max-width: 440px; background: #FFFFFF; border: 1px solid var(--color-border); border-radius: 4px; overflow: hidden; text-align: center; }
+        .card-top { background: var(--color-black); padding: 24px; }
+        .card-top svg { width: 56px; height: 56px; }
+        .card-body { padding: 28px 24px 32px; }
+        h1 { font-size: 20px; letter-spacing: -0.02em; margin: 0 0 12px; }
+        p { font-size: 14px; line-height: 1.55; color: var(--color-slate); margin: 0 0 8px; }
+        button {
+            margin-top: 20px; min-height: 48px; width: 100%; border: 0; border-radius: 4px; cursor: pointer;
+            background: linear-gradient(135deg, var(--color-green-start) 0%, var(--color-green-end) 100%);
+            color: var(--color-black); font-size: 14px; font-weight: 700; font-family: inherit;
+        }
+        button:focus-visible { outline: 3px solid var(--color-black); outline-offset: 2px; }
+    </style>
+</head>
+<body>
+    <main class="card" role="main">
+        <div class="card-top" aria-hidden="true">
+            <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2FD98A"/><stop offset="1" stop-color="#1FAE5C"/></linearGradient></defs>
+                <rect x="8" y="30" width="10" height="18" rx="2" fill="url(#g)"/>
+                <rect x="23" y="20" width="10" height="28" rx="2" fill="url(#g)"/>
+                <rect x="38" y="8" width="10" height="40" rx="2" fill="url(#g)"/>
+            </svg>
+        </div>
+        <div class="card-body">
+            <h1>You're offline</h1>
+            <p>Check your connection and try again.</p>
+            <p><strong>Nothing you were entering was saved.</strong></p>
+            <button type="button" id="retry">Try again</button>
+        </div>
+    </main>
+    <script>
+        document.getElementById('retry').addEventListener('click', function () {
+            // The address bar still shows the page that failed to load, so reloading retries that page.
+            window.location.reload();
+        });
+    </script>
+</body>
+</html>

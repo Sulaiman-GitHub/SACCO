@@ -6,9 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — SACCO Credit Intelligence Platform</title>
 
-    {{-- Bootstrap 5 CSS & Icons --}}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    {{-- Bootstrap 5 CSS & Icons (self-hosted so the service worker can cache them) --}}
+    <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+    @include('partials.pwa-head')
 
     <style>
         :root {
@@ -599,6 +600,7 @@
             </nav>
 
             <div class="sidebar-footer">
+                <div class="mb-2">@include('partials.pwa-install')</div>
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div style="font-size: 12px; font-weight: 600; color: #FFFFFF;">{{ Auth::user()->name }}</div>
@@ -663,7 +665,8 @@
     </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+@include('partials.pwa-scripts')
 <script>
     // Off-canvas navigation for tablet and phone widths.
     (function () {

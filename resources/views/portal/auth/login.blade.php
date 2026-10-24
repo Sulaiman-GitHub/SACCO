@@ -20,7 +20,7 @@
                     <label for="password" class="form-label" style="font-size: 13px; font-weight: 600;">Password</label>
                     <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
                 </div>
-                <button type="submit" class="btn btn-brand-primary w-100">Sign in</button>
+                <button type="submit" class="btn btn-brand-primary w-100" data-busy-label="Signing in...">Sign in</button>
             </form>
         </div>
         <p class="text-muted text-center" style="font-size: 12px;">SACCO staff sign in <a href="{{ route('login') }}">here</a>.</p>
