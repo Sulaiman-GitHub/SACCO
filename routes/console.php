@@ -8,6 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('loans:check-overdue')->dailyAt('01:00')
+Schedule::command('loans:check-overdue')->dailyAt('12:00')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/overdue-scan.log'));
