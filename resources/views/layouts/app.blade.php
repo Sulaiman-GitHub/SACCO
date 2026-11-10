@@ -42,6 +42,8 @@
             color: var(--color-black);
         }
 
+        .text-navy { color: var(--color-black) !important; }
+
         /* Layout structure */
         .app-shell {
             display: flex;

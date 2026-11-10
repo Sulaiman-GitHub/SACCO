@@ -22,7 +22,7 @@
 
 @section('content')
 {{-- Welcome Banner --}}
-<div class="sacco-card mb-4" style="background: linear-gradient(135deg, #0F172A 0%, #1A2127 100%); color: #FFFFFF; border: none; padding: 24px;">
+<div class="sacco-card mb-4" style="background: var(--color-black); color: #FFFFFF; border: none; padding: 24px;">
     <div class="row align-items-center">
         <div class="col-12">
             <h2 class="text-white mb-1" style="font-size: 22px;">{{ $sacco->name }}</h2>
@@ -143,7 +143,7 @@
                         <tbody>
                             @foreach($snapshot['at_risk_members']->take(5) as $row)
                                 <tr>
-                                    <td><a href="{{ route('tenant.loans.show', $row['loan_id']) }}" class="text-dark fw-semibold text-decoration-none">{{ $row['name'] }}</a></td>
+                                    <td><a href="{{ route('tenant.loans.show', $row['loan_id']) }}" class="text-navy fw-semibold text-decoration-none">{{ $row['name'] }}</a></td>
                                     <td><span class="badge" style="background: {{ $row['status'] === 'defaulted' ? 'var(--color-risk-high)' : 'var(--color-risk-medium)' }}; color: #fff;">{{ strtoupper($row['status']) }}</span></td>
                                     <td class="text-end font-monospace">{{ $row['days_overdue'] }}</td>
                                     <td class="text-end font-monospace fw-bold">{{ number_format($row['balance']) }}</td>
@@ -176,7 +176,7 @@
                                 @endphp
                                 <tr>
                                     <td>{{ $riskLoan->member->full_name ?? '—' }}</td>
-                                    <td><a href="{{ route('tenant.loans.show', $riskLoan) }}" class="font-monospace text-decoration-none text-dark" style="font-size: 12px;">{{ $riskLoan->loan_reference }}</a></td>
+                                    <td><a href="{{ route('tenant.loans.show', $riskLoan) }}" class="font-monospace text-decoration-none text-navy" style="font-size: 12px;">{{ $riskLoan->loan_reference }}</a></td>
                                     <td style="font-size: 12px;">{{ \App\Services\LendingDecisionEngine::label($riskLoan->decision) }}</td>
                                     <td class="text-end font-monospace fw-bold" style="color: {{ $scoreColor }};">{{ number_format($riskLoan->risk_score, 1) }}</td>
                                 </tr>
@@ -227,13 +227,13 @@
                             @foreach($recentSavings as $txn)
                                 <tr>
                                     <td>
-                                        <a href="{{ route('tenant.savings.show', $txn) }}" class="fw-bold font-monospace text-decoration-none text-dark" style="font-size: 11px;">
+                                        <a href="{{ route('tenant.savings.show', $txn) }}" class="fw-bold font-monospace text-decoration-none text-navy" style="font-size: 11px;">
                                             {{ $txn->transaction_reference }}
                                         </a>
                                         <div style="font-size: 11px; color: var(--color-slate);">{{ $txn->transaction_date->format('d M') }}</div>
                                     </td>
                                     <td>
-                                        <a href="{{ route('tenant.members.show', $txn->member) }}" class="text-dark fw-semibold text-decoration-none" style="font-size: 12px;">
+                                        <a href="{{ route('tenant.members.show', $txn->member) }}" class="text-navy fw-semibold text-decoration-none" style="font-size: 12px;">
                                             {{ $txn->member->full_name }}
                                         </a>
                                     </td>
@@ -292,7 +292,7 @@
                         <tbody>
                             @foreach($recentMembers as $member)
                                 <tr>
-                                    <td><span class="fw-semibold text-dark">{{ $member->member_number }}</span></td>
+                                    <td><span class="fw-semibold text-navy">{{ $member->member_number }}</span></td>
                                     <td>{{ $member->full_name }}</td>
                                     <td><code>{{ $member->phone }}</code></td>
                                     <td>
@@ -358,7 +358,7 @@
                     @foreach($recentLoans as $loan)
                         <tr>
                             <td>
-                                <a href="{{ route('tenant.loans.show', $loan) }}" class="fw-bold font-monospace text-decoration-none text-dark">
+                                <a href="{{ route('tenant.loans.show', $loan) }}" class="fw-bold font-monospace text-decoration-none text-navy">
                                     {{ $loan->loan_reference }}
                                 </a>
                             </td>
