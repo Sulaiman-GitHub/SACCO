@@ -635,6 +635,6 @@ class LoanManagementTest extends TestCase
             ->filter(fn ($event) => str_contains($event->command, 'loans:check-overdue'));
 
         $this->assertCount(1, $events);
-        $this->assertSame('0 1 * * *', $events->first()->expression);
+        $this->assertSame('0 12 * * *', $events->first()->expression);
     }
 }
