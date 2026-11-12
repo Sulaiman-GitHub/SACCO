@@ -176,6 +176,9 @@ repayments (id, sacco_id, loan_id, amount, payment_method, recorded_by, created_
 -- append-only
 
 audit_log (id, sacco_id, user_id, action, entity_type, entity_id, details_json, created_at)
+
+staff_invitations (id, user_id, sacco_id, token_hash, expires_at, used_at, created_by, created_at)
+-- one-time staff invitation; only the SHA-256 hash of the emailed token is stored
 ```
 
 *(Full column-level schema with types/constraints to be finalized during Module 1 implementation.)*
@@ -220,6 +223,7 @@ Label: `defaulted` (binary) — a loan that went unpaid past the SACCO's defined
 | Append-only transaction ledger | Standard double-entry bookkeeping practice; protects auditability and answers "why does this balance say X" disputes. |
 | Member portal is view-only with staff-issued credentials (Module 10) | Gives members access to their own data (a data-subject right under the DPPA) without new attack surface or an SMS/email provider. Members cannot write to financial records. Consent changes are requests that staff action, so the audited consent record is only ever written by staff. |
 | Members do not see their risk score or decision in the portal | Showing a score without a person to explain it can mislead. Members can ask the SACCO for an explanation instead, which keeps the officer's decision as the decision of record. Revisit with the SACCO and legal review. |
+| Staff accounts are created by administrators and activated by an emailed one-time link | Closed system, no self-registration. The link (`/staff/invite/{token}`, 48 h, single use, hash stored) lets the person set their own password and confirms their address. "Forgot password" (`/forgot-password`, `/reset-password/{token}`, Laravel's password broker, 60 min) answers identically for unknown addresses and works only for active staff of an active SACCO. Mail is configured only through `MAIL_*` in `.env`; sending is synchronous inside try/catch (queue with `MAIL_QUEUE=true`), so a mail failure never blocks sign-in or rolls back an account. Fallback: an administrator can set a temporary password. See `docs/EMAIL_SETUP.md`. |
 | Members are scored only with a recorded consent that allows it | One strict rule with no mode switch. Sample data satisfies it the same way real data does. |
 
 ---

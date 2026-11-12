@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\StaffInvitationController;
 use App\Http\Controllers\Portal\PortalAuthController;
 use App\Http\Controllers\Portal\PortalController;
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
@@ -45,6 +47,18 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+// Staff password reset by email (existing active staff only; same answer for unknown addresses)
+Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', [PasswordResetController::class, 'showRequestForm'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password/{token}', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1')->name('password.update');
+});
+
+// One-time staff invitation links, opened from the invitation email
+Route::get('/staff/invite/{token}', [StaffInvitationController::class, 'show'])->middleware('throttle:20,1')->name('staff.invitation.show');
+Route::post('/staff/invite/{token}', [StaffInvitationController::class, 'accept'])->middleware('throttle:10,1')->name('staff.invitation.accept');
 
 // Member Portal (Module 10): read-only, separate `member` guard
 Route::prefix('portal')->name('portal.')->group(function () {
@@ -131,6 +145,9 @@ Route::middleware(['auth', 'tenant_user'])->group(function () {
         Route::get('/create', [TenantStaffController::class, 'create'])->name('create');
         Route::post('/', [TenantStaffController::class, 'store'])->name('store');
         Route::post('/{user}/toggle-status', [TenantStaffController::class, 'toggleStatus'])->name('toggle_status');
+        Route::post('/{user}/resend-invitation', [TenantStaffController::class, 'resendInvitation'])->name('resend_invitation');
+        Route::get('/{user}/temporary-password', [TenantStaffController::class, 'editTemporaryPassword'])->name('temporary_password.edit');
+        Route::post('/{user}/temporary-password', [TenantStaffController::class, 'updateTemporaryPassword'])->name('temporary_password.update');
     });
 
     // Management reports and exports (Module 7)

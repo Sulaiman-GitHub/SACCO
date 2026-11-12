@@ -96,15 +96,19 @@
                     </div>
                 </div>
 
+                <div class="alert alert-light border mb-3" style="font-size: 12px; color: var(--color-slate);">
+                    <i class="bi bi-envelope-paper me-1 text-primary"></i> We will email the administrator a link, valid for 48 hours, to choose their own password. Only fill in a password below if email is not working.
+                </div>
+
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <label for="admin_password" class="form-label">Initial Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control @error('admin_password') is-invalid @enderror" id="admin_password" name="admin_password" required placeholder="Minimum 8 characters">
+                        <label for="admin_password" class="form-label">Temporary Password (optional)</label>
+                        <input type="password" class="form-control @error('admin_password') is-invalid @enderror" id="admin_password" name="admin_password" autocomplete="new-password" placeholder="Leave blank to send an invitation">
                         @error('admin_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-6">
-                        <label for="admin_password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" id="admin_password_confirmation" name="admin_password_confirmation" required placeholder="Repeat password">
+                        <label for="admin_password_confirmation" class="form-label">Confirm Temporary Password</label>
+                        <input type="password" class="form-control" id="admin_password_confirmation" name="admin_password_confirmation" autocomplete="new-password" placeholder="Repeat password">
                     </div>
                 </div>
 

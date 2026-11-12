@@ -9,6 +9,9 @@ use App\Models\Repayment;
 use App\Models\Sacco;
 use App\Models\Saving;
 use App\Models\User;
+use App\Notifications\StaffInvitationNotification;
+use App\Notifications\StaffPasswordResetNotification;
+use App\Services\StaffInvitations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -166,6 +169,39 @@ class NoInternalLanguageTest extends TestCase
             route('tenant.lending_policy.edit'),
         ] as $url) {
             $this->assertCleanPage($url);
+        }
+    }
+
+    public function test_invitation_and_password_reset_screens_contain_no_internal_language(): void
+    {
+        $invited = User::factory()->unverified()->create(['sacco_id' => $this->sacco->id, 'role' => 'loan_officer', 'status' => 'active']);
+        $token = app(StaffInvitations::class)->issue($invited, $this->admin);
+
+        $this->assertCleanPage(route('password.request'));
+        $this->assertCleanPage(route('password.reset', ['token' => 'abc', 'email' => 'a@b.test']));
+        $this->assertCleanPage(route('staff.invitation.show', $token));
+
+        // A link that cannot be used renders its own page, with a 410 status.
+        $html = $this->get(route('staff.invitation.show', 'unknown'))->assertStatus(410)->getContent();
+        $this->assertSame(0, preg_match(self::FORBIDDEN[0], $this->visibleText($html)));
+        $this->assertStringNotContainsString('<!--', $html);
+
+        $this->actingAs($this->admin);
+        $this->assertCleanPage(route('tenant.staff.index'));
+        $this->assertCleanPage(route('tenant.staff.temporary_password.edit', $invited));
+    }
+
+    public function test_staff_emails_contain_no_internal_language(): void
+    {
+        $invitation = (new StaffInvitationNotification('tok', $this->sacco, 48))->toMail($this->officer)->render();
+        $reset = (new StaffPasswordResetNotification('tok'))->toMail($this->officer)->render();
+
+        foreach ([$invitation, $reset] as $html) {
+            $text = $this->visibleText($html);
+
+            foreach (self::FORBIDDEN as $pattern) {
+                $this->assertSame(0, preg_match($pattern, $text, $hit), "An email shows internal language matching {$pattern}: ".($hit[0] ?? ''));
+            }
         }
     }
 
