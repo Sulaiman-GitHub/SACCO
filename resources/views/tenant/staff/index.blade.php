@@ -54,8 +54,13 @@
                                     <span class="badge bg-info text-dark">Loan Officer</span>
                                 @endif
                             </td>
+                            @php $invitationState = $member->invitationState(); @endphp
                             <td data-label="Status">
-                                @if($member->status === 'active')
+                                @if($member->status === 'active' && $invitationState === 'invited')
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-envelope-paper me-1"></i>Invited</span>
+                                @elseif($member->status === 'active' && $invitationState === 'invitation_expired')
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-envelope-exclamation me-1"></i>Invitation expired</span>
+                                @elseif($member->status === 'active')
                                     <span class="badge-active"><i class="bi bi-check-circle-fill me-1"></i>Active</span>
                                 @else
                                     <span class="badge-inactive"><i class="bi bi-pause-circle-fill me-1"></i>Inactive</span>
@@ -64,6 +69,17 @@
                             <td data-label="Created" class="text-muted" style="font-size: 11px;">{{ $member->created_at->format('M d, Y') }}</td>
                             <td data-label="" class="text-end">
                                 @if($member->id !== Auth::id())
+                                    @if($member->status === 'active' && $invitationState !== 'active')
+                                        <form method="POST" action="{{ route('tenant.staff.resend_invitation', $member) }}" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 12px;">
+                                                <i class="bi bi-envelope me-1"></i>Resend invitation
+                                            </button>
+                                        </form>
+                                    @endif
+                                    <a href="{{ route('tenant.staff.temporary_password.edit', $member) }}" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 12px;">
+                                        <i class="bi bi-key me-1"></i>Temporary password
+                                    </a>
                                     <form method="POST" action="{{ route('tenant.staff.toggle_status', $member) }}" class="d-inline" onsubmit="return confirm('Toggle status for this staff member?');">
                                         @csrf
                                         <button type="submit" class="btn btn-sm {{ $member->status === 'active' ? 'btn-outline-danger' : 'btn-outline-success' }} py-1 px-2" style="font-size: 12px;">

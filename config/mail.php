@@ -115,4 +115,17 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Queue Staff Emails
+    |--------------------------------------------------------------------------
+    |
+    | Staff invitation and password-reset emails are sent straight away so a mail
+    | failure can be shown to the administrator. Set MAIL_QUEUE=true only when a
+    | queue worker is running and you prefer to send them in the background.
+    |
+    */
+
+    'queue_notifications' => (bool) env('MAIL_QUEUE', false),
+
 ];

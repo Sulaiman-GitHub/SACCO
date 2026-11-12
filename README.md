@@ -56,6 +56,10 @@ The service listens on `http://127.0.0.1:8001` (`GET /health`, `GET /model-info`
 
 Tip: keep the project in a short path, since deep folder paths can exceed Windows path limits when installing Python packages.
 
+### Staff email invitations and password reset
+
+There is no self-registration. An administrator adds a staff member and, if the password fields are left blank, the person is emailed a one-time link (valid 48 hours) to choose their own password at `/staff/invite/{token}`. "Forgot your password?" on the staff sign-in page emails a reset link (valid 60 minutes) via `/forgot-password` and `/reset-password/{token}`; it works only for existing active staff of an active SACCO. Run `php artisan migrate` (new `staff_invitations` table) and set the `MAIL_*` values in `.env` (default `MAIL_MAILER=log` only writes emails to the log). See [docs/EMAIL_SETUP.md](docs/EMAIL_SETUP.md). If email is unavailable, an administrator can set a temporary password from the Staff screen, and sign-in never depends on mail.
+
 ## Running the tests
 
 Web application (uses an in-memory SQLite database):

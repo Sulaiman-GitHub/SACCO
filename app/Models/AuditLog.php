@@ -83,6 +83,12 @@ class AuditLog extends Model
         'consent.change_requested' => 'Member asked to change consent',
         'consent.change_request_processed' => 'Consent request processed',
         'consent.change_request_dismissed' => 'Consent request dismissed',
+        'staff.invited' => 'Staff member invited',
+        'staff.invitation_resent' => 'Staff invitation sent again',
+        'staff.invitation_accepted' => 'Staff invitation accepted',
+        'staff.temporary_password_set' => 'Temporary password set for staff member',
+        'staff.password_reset_requested' => 'Staff password reset requested',
+        'staff.password_reset_completed' => 'Staff password reset completed',
     ];
 
     /**
@@ -97,6 +103,7 @@ class AuditLog extends Model
         'Member' => 'Member',
         'LendingPolicy' => 'Lending policy',
         'ConsentChangeRequest' => 'Consent request',
+        'User' => 'Staff member',
     ];
 
     /**
