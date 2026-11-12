@@ -3,4 +3,5 @@
     $pwaVersion = static fn (string $file): int => (int) @filemtime(public_path($file));
 @endphp
 <script src="{{ asset('js/offline-guard.js') }}?v={{ $pwaVersion('js/offline-guard.js') }}" defer></script>
+<script src="{{ asset('js/password-toggle.js') }}?v={{ $pwaVersion('js/password-toggle.js') }}" defer></script>
 <script src="{{ asset('js/pwa.js') }}?v={{ $pwaVersion('js/pwa.js') }}" defer></script>
