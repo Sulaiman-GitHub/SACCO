@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Loan;
+use App\Models\Member;
 use App\Models\Sacco;
+use App\Models\Saving;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -76,5 +78,25 @@ class DashboardCardLinksTest extends TestCase
         $this->assertEqualsCanonicalizing(['overdue', 'defaulted'], Loan::status('at_risk')->pluck('status')->all());
         $this->assertEqualsCanonicalizing(['disbursed', 'overdue', 'defaulted'], Loan::status('outstanding')->pluck('status')->all());
         $this->assertSame(['pending'], Loan::status('pending')->pluck('status')->all());
+    }
+
+    public function test_deposits_today_card_opens_only_todays_deposits(): void
+    {
+        $member = Member::factory()->create(['sacco_id' => $this->sacco->id]);
+        $today = now()->toDateString();
+
+        Saving::factory()->count(2)->create(['sacco_id' => $this->sacco->id, 'member_id' => $member->id, 'type' => 'deposit', 'transaction_date' => $today]);
+        Saving::factory()->create(['sacco_id' => $this->sacco->id, 'member_id' => $member->id, 'type' => 'withdrawal', 'transaction_date' => $today]);
+        Saving::factory()->create(['sacco_id' => $this->sacco->id, 'member_id' => $member->id, 'type' => 'deposit', 'transaction_date' => now()->subDays(3)->toDateString()]);
+
+        $user = $this->staff('loan_officer');
+        $url = route('tenant.savings.index', ['type' => 'deposit', 'start_date' => $today, 'end_date' => $today]);
+
+        $this->actingAs($user)->get(route('tenant.dashboard'))->assertSee(e($url), false);
+
+        $list = $this->actingAs($user)->get($url);
+
+        $list->assertOk();
+        $this->assertSame(2, $list->viewData('savings')->total());
     }
 }

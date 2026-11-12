@@ -263,11 +263,11 @@ class Saving extends Model
     public function scopeDateRange(Builder $query, ?string $startDate, ?string $endDate): Builder
     {
         if (! empty($startDate)) {
-            $query->where('transaction_date', '>=', $startDate);
+            $query->whereDate('transaction_date', '>=', $startDate);
         }
 
         if (! empty($endDate)) {
-            $query->where('transaction_date', '<=', $endDate);
+            $query->whereDate('transaction_date', '<=', $endDate);
         }
 
         return $query;

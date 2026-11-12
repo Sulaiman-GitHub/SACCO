@@ -87,7 +87,7 @@
 {{-- Portfolio Health --}}
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-lg-3">
-        <a class="stat-tile" href="{{ route('tenant.savings.index') }}" aria-label="Deposits Today: view savings transactions">
+        <a class="stat-tile" href="{{ route('tenant.savings.index', ['type' => 'deposit', 'start_date' => now()->toDateString(), 'end_date' => now()->toDateString()]) }}" aria-label="Deposits Today: view today's deposits">
             <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
             <div class="stat-title">Deposits Today</div>
             <div class="stat-value font-monospace" style="color: var(--color-teal); font-size: 20px;">UGX {{ number_format($snapshot['deposits_today']) }}</div>
