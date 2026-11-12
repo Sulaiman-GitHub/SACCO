@@ -64,6 +64,9 @@
                 <option value="disbursed" {{ $status === 'disbursed' ? 'selected' : '' }}>Disbursed / Performing</option>
                 <option value="overdue" {{ $status === 'overdue' ? 'selected' : '' }}>Overdue (&le; 90 days)</option>
                 <option value="defaulted" {{ $status === 'defaulted' ? 'selected' : '' }}>Defaulted (&gt; 90 days)</option>
+                <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active (disbursed or overdue)</option>
+                <option value="at_risk" {{ $status === 'at_risk' ? 'selected' : '' }}>At risk (overdue or defaulted)</option>
+                <option value="outstanding" {{ $status === 'outstanding' ? 'selected' : '' }}>Outstanding balance (all unpaid)</option>
                 <option value="closed" {{ $status === 'closed' ? 'selected' : '' }}>Closed / Fully Repaid</option>
                 <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Rejected</option>
             </select>

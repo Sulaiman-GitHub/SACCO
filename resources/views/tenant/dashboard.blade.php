@@ -38,71 +38,88 @@
 {{-- Stat Tiles --}}
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-lg-3">
-        <div class="stat-tile">
+        <a class="stat-tile" href="{{ route('tenant.savings.index') }}" aria-label="Net Savings Portfolio: view savings transactions">
+            <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
             <div class="stat-title">Net Savings Portfolio</div>
             <div class="stat-value font-monospace" style="color: var(--color-teal); font-size: 20px;">
                 UGX {{ number_format($portfolioBalance) }}
             </div>
             <div class="stat-desc">Computed: Deposits − Withdrawals</div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="stat-tile">
+        <a class="stat-tile" href="{{ route('tenant.loans.index', ['status' => 'outstanding']) }}" aria-label="Loan Portfolio Balance: view loans with an outstanding balance">
+            <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
             <div class="stat-title">Loan Portfolio Balance</div>
             <div class="stat-value font-monospace" style="color: var(--color-risk-low); font-size: 20px;">
                 UGX {{ number_format($outstandingLoanDebt) }}
             </div>
             <div class="stat-desc">{{ $activeLoansCount }} active &bull; {{ $delinquentLoansCount }} delinquent</div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="stat-tile">
+        <a class="stat-tile" href="{{ route('tenant.members.index') }}" aria-label="Registered Members: view member directory">
+            <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
             <div class="stat-title">Registered Members</div>
             <div class="stat-value">{{ number_format($membersCount) }}</div>
             <div class="stat-desc">{{ number_format($activeMembersCount) }} in active standing</div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="stat-tile">
-            <div class="stat-title">Authorized Staff</div>
-            <div class="stat-value">{{ $staffCount }}</div>
-            <div class="stat-desc">{{ $loanOfficersCount }} loan officers assigned</div>
-        </div>
+        {{-- Staff management is admin-only, so loan officers get a plain tile. --}}
+        @if(Auth::user()->isSaccoAdmin())
+            <a class="stat-tile" href="{{ route('tenant.staff.index') }}" aria-label="Authorized Staff: manage staff">
+                <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
+                <div class="stat-title">Authorized Staff</div>
+                <div class="stat-value">{{ $staffCount }}</div>
+                <div class="stat-desc">{{ $loanOfficersCount }} loan officers assigned</div>
+            </a>
+        @else
+            <div class="stat-tile">
+                <div class="stat-title">Authorized Staff</div>
+                <div class="stat-value">{{ $staffCount }}</div>
+                <div class="stat-desc">{{ $loanOfficersCount }} loan officers assigned</div>
+            </div>
+        @endif
     </div>
 </div>
 
 {{-- Portfolio Health --}}
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-lg-3">
-        <div class="stat-tile">
+        <a class="stat-tile" href="{{ route('tenant.savings.index') }}" aria-label="Deposits Today: view savings transactions">
+            <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
             <div class="stat-title">Deposits Today</div>
             <div class="stat-value font-monospace" style="color: var(--color-teal); font-size: 20px;">UGX {{ number_format($snapshot['deposits_today']) }}</div>
             <div class="stat-desc">Withdrawals today: UGX {{ number_format($snapshot['withdrawals_today']) }}</div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="stat-tile">
+        <a class="stat-tile" href="{{ route('tenant.loans.index', ['status' => 'at_risk']) }}" aria-label="Portfolio at Risk: view overdue and defaulted loans">
+            <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
             <div class="stat-title">Portfolio at Risk</div>
             @php
                 $parColor = $snapshot['portfolio_at_risk_pct'] >= 20 ? 'var(--color-risk-high)' : ($snapshot['portfolio_at_risk_pct'] >= 5 ? 'var(--color-risk-medium)' : 'var(--color-risk-low)');
             @endphp
             <div class="stat-value" style="color: {{ $parColor }};">{{ number_format($snapshot['portfolio_at_risk_pct'], 1) }}%</div>
             <div class="stat-desc">UGX {{ number_format($snapshot['at_risk_balance']) }} overdue or defaulted</div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="stat-tile">
+        <a class="stat-tile" href="{{ route('tenant.loans.index', ['status' => 'at_risk']) }}" aria-label="Members in Arrears: view overdue and defaulted loans">
+            <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
             <div class="stat-title">Members in Arrears</div>
             <div class="stat-value">{{ $snapshot['at_risk_members']->pluck('member_id')->unique()->count() }}</div>
             <div class="stat-desc">{{ $snapshot['defaulted_loans'] }} defaulted loan(s)</div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="stat-tile">
+        <a class="stat-tile" href="{{ route('tenant.loans.index', ['status' => 'pending']) }}" aria-label="Awaiting Decision: view pending loan applications">
+            <i class="bi bi-arrow-right stat-go" aria-hidden="true"></i>
             <div class="stat-title">Awaiting Decision</div>
             <div class="stat-value">{{ $snapshot['pending_loans'] }}</div>
             <div class="stat-desc">Pending loan applications</div>
-        </div>
+        </a>
     </div>
 </div>
 

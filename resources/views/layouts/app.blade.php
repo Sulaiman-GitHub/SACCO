@@ -266,6 +266,36 @@
             padding: 16px 20px;
         }
 
+        /* Clickable summary card: the whole tile is the link. */
+        a.stat-tile {
+            display: block;
+            position: relative;
+            color: inherit;
+            text-decoration: none;
+            transition: border-color .15s, box-shadow .15s, transform .15s;
+        }
+        a.stat-tile:hover {
+            border-color: var(--color-teal);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+            transform: translateY(-1px);
+        }
+        a.stat-tile:focus-visible {
+            outline: 2px solid var(--color-teal);
+            outline-offset: 2px;
+        }
+        a.stat-tile .stat-go {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            font-size: 13px;
+            color: var(--color-slate);
+            opacity: .6;
+        }
+        a.stat-tile:hover .stat-go { opacity: 1; color: var(--color-teal); }
+        @media (prefers-reduced-motion: reduce) {
+            a.stat-tile { transition: none; transform: none !important; }
+        }
+
         .stat-title {
             font-size: 12px;
             font-weight: 600;

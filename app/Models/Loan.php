@@ -22,6 +22,18 @@ class Loan extends Model
     /**
      * Default overdue threshold: loans past due date up to 90 days.
      */
+    /**
+     * Named groups of statuses the loan list can filter by; the dashboard cards
+     * link to these so each card's count matches the list it opens.
+     *
+     * @var array<string, list<string>>
+     */
+    public const STATUS_GROUPS = [
+        'active' => ['disbursed', 'overdue'],
+        'at_risk' => ['overdue', 'defaulted'],
+        'outstanding' => ['disbursed', 'overdue', 'defaulted'],
+    ];
+
     public const GRACE_PERIOD_DAYS = 30;
 
     /**
@@ -556,6 +568,10 @@ class Loan extends Model
     {
         if (empty($status) || $status === 'all') {
             return $query;
+        }
+
+        if (isset(self::STATUS_GROUPS[$status])) {
+            return $query->whereIn('status', self::STATUS_GROUPS[$status]);
         }
 
         return $query->where('status', $status);
