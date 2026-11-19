@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Models\ConsentChangeRequest;
 use App\Models\Loan;
 use App\Models\Member;
+use App\Models\PaymentTransaction;
 use App\Models\Repayment;
 use App\Models\Sacco;
+use App\Models\SaccoPaymentSetting;
 use App\Models\Saving;
 use App\Models\User;
 use App\Notifications\StaffInvitationNotification;
@@ -116,6 +118,16 @@ class NoInternalLanguageTest extends TestCase
         ConsentChangeRequest::openFor($this->member, ConsentChangeRequest::TYPE_WITHDRAW_SCORING, null);
         $this->member->issuePortalCredentials();
 
+        // Online payments switched on, with one finished and one open payment to render
+        SaccoPaymentSetting::withoutTenantScope()->create(['sacco_id' => $this->sacco->id, 'provider' => 'fake', 'environment' => 'sandbox', 'enabled' => true]);
+        foreach (['successful', 'pending', 'failed'] as $i => $status) {
+            PaymentTransaction::withoutTenantScope()->create([
+                'sacco_id' => $this->sacco->id, 'member_id' => $this->member->id, 'purpose' => 'deposit', 'tx_ref' => 'PAY-TEST-'.$i,
+                'provider' => 'fake', 'amount' => 5000, 'currency' => 'UGX', 'network' => 'mtn', 'status' => $status,
+                'failure_reason' => $status === 'failed' ? 'Insufficient funds' : null,
+            ]);
+        }
+
         return $loan;
     }
 
@@ -158,6 +170,7 @@ class NoInternalLanguageTest extends TestCase
             route('tenant.savings.index'),
             route('tenant.savings.create'),
             route('tenant.loans.index'),
+            route('tenant.payments.index'),
             route('tenant.loans.index', ['source' => 'member_portal']),
             route('tenant.loans.create'),
             route('tenant.loans.show', $loan),
@@ -272,7 +285,7 @@ class NoInternalLanguageTest extends TestCase
         $this->actingAs($this->member->fresh(), 'member');
         Auth::shouldUse('web');
 
-        foreach ([route('portal.dashboard'), route('portal.savings'), route('portal.loans'), route('portal.loan_requests.create'), route('portal.consent'), route('portal.password.edit')] as $url) {
+        foreach ([route('portal.dashboard'), route('portal.savings'), route('portal.loans'), route('portal.loan_requests.create'), route('portal.deposits.create'), route('portal.payments.show', 'PAY-TEST-0'), route('portal.payments.show', 'PAY-TEST-1'), route('portal.payments.show', 'PAY-TEST-2'), route('portal.consent'), route('portal.password.edit')] as $url) {
             $this->assertCleanPage($url);
         }
     }

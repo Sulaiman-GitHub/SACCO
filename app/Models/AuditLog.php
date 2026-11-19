@@ -72,6 +72,10 @@ class AuditLog extends Model
         'savings.recorded' => 'Savings transaction recorded',
         'repayment.recorded' => 'Repayment recorded',
         'loan.applied' => 'Loan application submitted',
+        'payment.initiated' => 'Online payment started',
+        'payment.succeeded' => 'Online payment received',
+        'payment.failed' => 'Online payment failed',
+        'payment.expired' => 'Online payment expired',
         'loan.requested' => 'Member requested a loan from the portal',
         'loan.approved' => 'Loan approved',
         'loan.rejected' => 'Loan rejected',
@@ -98,6 +102,7 @@ class AuditLog extends Model
      * @var array<string, string>
      */
     private const ENTITY_LABELS = [
+        'PaymentTransaction' => 'Online payment',
         'Saving' => 'Savings transaction',
         'Repayment' => 'Repayment',
         'Loan' => 'Loan',
@@ -118,6 +123,10 @@ class AuditLog extends Model
         'amount' => 'Amount (UGX)',
         'principal' => 'Principal (UGX)',
         'term_months' => 'Term (months)',
+        'purpose' => 'Purpose',
+        'network' => 'Paid with',
+        'tx_ref' => 'Payment reference',
+        'needs_attention' => 'Needs staff attention',
         'payment_method' => 'Payment method',
         'method' => 'Method',
         'payment_reference' => 'Payment reference',

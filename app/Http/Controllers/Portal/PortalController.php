@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\ConsentChangeRequest;
 use App\Models\Member;
+use App\Services\Payments\PaymentGatewayManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -42,6 +43,7 @@ class PortalController extends Controller
 
         return view('portal.savings', [
             'member' => $member,
+            'canPayOnline' => app(PaymentGatewayManager::class)->isAvailableFor((int) $member->sacco_id),
             'transactions' => $member->savings()->latest('transaction_date')->latest('id')->paginate(15),
         ]);
     }

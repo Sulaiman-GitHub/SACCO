@@ -25,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'member_portal' => EnsureMemberPortalAccess::class,
         ]);
 
+        // The payment provider cannot send a CSRF token; the webhook is authenticated by its signature header instead.
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+
         // A signed-in member who opens a guest-only page (the portal login) goes to the portal.
         $middleware->redirectUsersTo(fn () => Auth::guard('member')->check() ? route('portal.dashboard') : '/');
     })

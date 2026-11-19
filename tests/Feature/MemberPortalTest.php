@@ -327,6 +327,7 @@ class MemberPortalTest extends TestCase
             'portal.password.update',
             'portal.consent_requests.store',
             'portal.loan_requests.store',
+            'portal.deposits.store',
         ];
 
         $writeRoutes = collect(Route::getRoutes()->getRoutes())

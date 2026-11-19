@@ -614,6 +614,9 @@
                     <a href="{{ route('tenant.repayments.index') }}" class="nav-link-custom {{ request()->routeIs('tenant.repayments.*') ? 'active' : '' }}">
                         <i class="bi bi-receipt"></i> Repayments Ledger
                     </a>
+                    <a href="{{ route('tenant.payments.index') }}" class="nav-link-custom {{ request()->routeIs('tenant.payments.*') ? 'active' : '' }}">
+                        <i class="bi bi-phone"></i> Online Payments
+                    </a>
                     @if(Auth::user()->isSaccoAdmin())
                         <a href="{{ route('tenant.staff.index') }}" class="nav-link-custom {{ request()->routeIs('tenant.staff.*') ? 'active' : '' }}">
                             <i class="bi bi-people"></i> Staff & Users
