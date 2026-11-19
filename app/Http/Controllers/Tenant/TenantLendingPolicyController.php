@@ -34,6 +34,8 @@ class TenantLendingPolicyController extends Controller
             'max_loan_to_savings_ratio' => $request->validated('max_loan_to_savings_ratio'),
             'min_tenure_months' => $request->validated('min_tenure_months'),
             'reject_on_past_default' => $request->boolean('reject_on_past_default'),
+            'default_interest_rate' => $request->validated('default_interest_rate'),
+            'default_interest_calculation_type' => $request->validated('default_interest_calculation_type'),
         ]);
 
         return redirect()->route('tenant.lending_policy.edit')

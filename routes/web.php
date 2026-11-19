@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\StaffInvitationController;
 use App\Http\Controllers\Portal\PortalAuthController;
 use App\Http\Controllers\Portal\PortalController;
+use App\Http\Controllers\Portal\PortalLoanRequestController;
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
 use App\Http\Controllers\Tenant\TenantAuditLogController;
 use App\Http\Controllers\Tenant\TenantDashboardController;
@@ -75,6 +76,8 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/', [PortalController::class, 'dashboard'])->name('dashboard');
         Route::get('/savings', [PortalController::class, 'savings'])->name('savings');
         Route::get('/loans', [PortalController::class, 'loans'])->name('loans');
+        Route::get('/loans/request', [PortalLoanRequestController::class, 'create'])->name('loan_requests.create');
+        Route::post('/loans/request', [PortalLoanRequestController::class, 'store'])->middleware('throttle:5,1')->name('loan_requests.store');
         Route::get('/consent', [PortalController::class, 'consent'])->name('consent');
         Route::post('/consent-requests', [PortalController::class, 'storeConsentRequest'])->name('consent_requests.store');
     });

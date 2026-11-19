@@ -158,6 +158,7 @@ class NoInternalLanguageTest extends TestCase
             route('tenant.savings.index'),
             route('tenant.savings.create'),
             route('tenant.loans.index'),
+            route('tenant.loans.index', ['source' => 'member_portal']),
             route('tenant.loans.create'),
             route('tenant.loans.show', $loan),
             route('tenant.repayments.index'),
@@ -271,7 +272,7 @@ class NoInternalLanguageTest extends TestCase
         $this->actingAs($this->member->fresh(), 'member');
         Auth::shouldUse('web');
 
-        foreach ([route('portal.dashboard'), route('portal.savings'), route('portal.loans'), route('portal.consent'), route('portal.password.edit')] as $url) {
+        foreach ([route('portal.dashboard'), route('portal.savings'), route('portal.loans'), route('portal.loan_requests.create'), route('portal.consent'), route('portal.password.edit')] as $url) {
             $this->assertCleanPage($url);
         }
     }

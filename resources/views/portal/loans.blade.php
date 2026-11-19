@@ -4,6 +4,10 @@
 @section('page_title', 'My loans')
 
 @section('content')
+<div class="mb-3">
+    <a href="{{ route('portal.loan_requests.create') }}" class="btn btn-brand-primary btn-block-mobile"><i class="bi bi-plus-lg me-1"></i> Request a loan</a>
+</div>
+
 @forelse($loans as $loan)
     <div class="sacco-card">
         <div class="sacco-card-header">
@@ -25,8 +29,17 @@
             <div class="col-6 col-md-3"><div class="stat-title">Due date</div>{{ $loan->due_date?->format('d M Y') ?? 'Not yet set' }}</div>
         </div>
 
-        @if($loan->isRejected())
-            <div class="text-muted mb-3" style="font-size: 12px;">This application was not approved. Ask your SACCO if you would like to know why.</div>
+        @if($loan->isPending())
+            <div class="text-muted mb-3" style="font-size: 12px;">Your request is with the SACCO and has not been decided yet.</div>
+        @elseif($loan->isApproved())
+            <div class="text-muted mb-3" style="font-size: 12px;">Your loan has been approved. The SACCO will pay it out and let you know.</div>
+        @elseif($loan->isRejected())
+            <div class="mb-3" style="font-size: 13px;">
+                <strong>This request was not approved.</strong>
+                @if($loan->rejection_reason)
+                    <div class="text-muted">Reason given by the SACCO: {{ $loan->rejection_reason }}</div>
+                @endif
+            </div>
         @endif
 
         <div class="stat-title">Repayments</div>

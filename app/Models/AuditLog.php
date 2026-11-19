@@ -72,6 +72,7 @@ class AuditLog extends Model
         'savings.recorded' => 'Savings transaction recorded',
         'repayment.recorded' => 'Repayment recorded',
         'loan.applied' => 'Loan application submitted',
+        'loan.requested' => 'Member requested a loan from the portal',
         'loan.approved' => 'Loan approved',
         'loan.rejected' => 'Loan rejected',
         'loan.disbursed' => 'Loan disbursed',
@@ -116,6 +117,7 @@ class AuditLog extends Model
         'type' => 'Type',
         'amount' => 'Amount (UGX)',
         'principal' => 'Principal (UGX)',
+        'term_months' => 'Term (months)',
         'payment_method' => 'Payment method',
         'method' => 'Method',
         'payment_reference' => 'Payment reference',
@@ -148,6 +150,8 @@ class AuditLog extends Model
         'max_loan_to_savings_ratio' => 'Maximum loan-to-savings ratio',
         'min_tenure_months' => 'Minimum membership (months)',
         'reject_on_past_default' => 'Reject on a previous default',
+        'default_interest_rate' => 'Interest rate for member requests (%)',
+        'default_interest_calculation_type' => 'Interest method for member requests',
     ];
 
     /**

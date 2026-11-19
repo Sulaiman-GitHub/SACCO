@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateLendingPolicyRequest extends FormRequest
 {
@@ -28,6 +29,8 @@ class UpdateLendingPolicyRequest extends FormRequest
             'max_loan_to_savings_ratio' => ['nullable', 'numeric', 'min:0.1', 'max:999'],
             'min_tenure_months' => ['required', 'integer', 'min:0', 'max:120'],
             'reject_on_past_default' => ['boolean'],
+            'default_interest_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+            'default_interest_calculation_type' => ['required', 'string', Rule::in(['flat', 'simple'])],
         ];
     }
 
