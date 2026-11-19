@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'member_portal' => EnsureMemberPortalAccess::class,
         ]);
 
+        // Behind a tunnel or load balancer, trust its forwarded host and scheme. Off unless TRUSTED_PROXIES is set
+        // (for example TRUSTED_PROXIES=* for a local tunnel), so a direct visitor can never spoof them.
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES') ? array_map('trim', explode(',', (string) env('TRUSTED_PROXIES'))) : null);
+
         // The payment provider cannot send a CSRF token; the webhook is authenticated by its signature header instead.
         $middleware->validateCsrfTokens(except: ['webhooks/*']);
 

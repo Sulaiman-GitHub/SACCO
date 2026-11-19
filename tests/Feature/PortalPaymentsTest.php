@@ -132,6 +132,39 @@ class PortalPaymentsTest extends TestCase
         return $this->postJson(route('webhooks.flutterwave', $sacco), $body, $hash === null ? [] : ['verif-hash' => $hash]);
     }
 
+    /**
+     * Override env values wherever env() can read them, so a developer .env cannot leak into a test.
+     *
+     * @param  array<string, string|null>  $values
+     * @return array<string, mixed> previous state, for restoreEnv()
+     */
+    private function overrideEnv(array $values): array
+    {
+        $previous = [];
+        foreach ($values as $name => $value) {
+            $previous[$name] = [$_ENV[$name] ?? null, $_SERVER[$name] ?? null, getenv($name)];
+            foreach ([&$_ENV, &$_SERVER] as &$bag) {
+                $value === null ? $bag[$name] = '' : $bag[$name] = $value;
+            }
+            unset($bag);
+            putenv($value === null ? $name.'=' : $name.'='.$value);
+        }
+
+        return $previous;
+    }
+
+    /**
+     * @param  array<string, mixed>  $previous
+     */
+    private function restoreEnv(array $previous): void
+    {
+        foreach ($previous as $name => [$env, $server, $process]) {
+            $env === null ? $_ENV[$name] = '' : $_ENV[$name] = $env;
+            $server === null ? $_SERVER[$name] = '' : $_SERVER[$name] = $server;
+            putenv($process === false ? $name : $name.'='.$process);
+        }
+    }
+
     private function savings(): int
     {
         return Saving::withoutTenantScope()->count();
@@ -573,10 +606,12 @@ class PortalPaymentsTest extends TestCase
     public function test_configure_command_stores_encrypted_settings_and_prints_the_webhook_url_without_secrets(): void
     {
         $saccoB = Sacco::factory()->create(['name' => 'Kampala Teachers SACCO', 'status' => 'active']);
-        putenv('FLW_V3_PUBLIC_KEY=FLWPUBK_TEST-pub');
-        putenv('FLW_V3_SECRET_KEY=FLWSECK_TEST-cmdsecret');
-        putenv('FLW_V3_ENCRYPTION_KEY=FLWSECK_TEST-enc');
-        putenv('FLW_V3_WEBHOOK_HASH=cmd-hash-value');
+        $previous = $this->overrideEnv([
+            'FLW_V3_PUBLIC_KEY' => 'FLWPUBK_TEST-pub',
+            'FLW_V3_SECRET_KEY' => 'FLWSECK_TEST-cmdsecret',
+            'FLW_V3_ENCRYPTION_KEY' => 'FLWSECK_TEST-enc',
+            'FLW_V3_WEBHOOK_HASH' => 'cmd-hash-value',
+        ]);
 
         try {
             $this->artisan('payments:configure', ['sacco_id' => $saccoB->id])
@@ -585,9 +620,7 @@ class PortalPaymentsTest extends TestCase
                 ->doesntExpectOutputToContain('cmd-hash-value')
                 ->assertSuccessful();
         } finally {
-            foreach (['FLW_V3_PUBLIC_KEY', 'FLW_V3_SECRET_KEY', 'FLW_V3_ENCRYPTION_KEY', 'FLW_V3_WEBHOOK_HASH'] as $name) {
-                putenv($name);
-            }
+            $this->restoreEnv($previous);
         }
 
         $settings = SaccoPaymentSetting::withoutTenantScope()->where('sacco_id', $saccoB->id)->firstOrFail();
@@ -603,13 +636,11 @@ class PortalPaymentsTest extends TestCase
 
         $this->artisan('payments:configure', ['sacco_id' => $saccoB->id, '--environment' => 'live'])->assertFailed();
 
-        putenv('FLW_V3_SECRET_KEY=FLWSECK-not-a-test-key');
-        putenv('FLW_V3_WEBHOOK_HASH=x');
+        $previous = $this->overrideEnv(['FLW_V3_SECRET_KEY' => 'FLWSECK-not-a-test-key', 'FLW_V3_WEBHOOK_HASH' => 'x']);
         try {
             $this->artisan('payments:configure', ['sacco_id' => $saccoB->id, '--no-interaction' => true])->assertFailed();
         } finally {
-            putenv('FLW_V3_SECRET_KEY');
-            putenv('FLW_V3_WEBHOOK_HASH');
+            $this->restoreEnv($previous);
         }
 
         $this->assertSame(0, SaccoPaymentSetting::withoutTenantScope()->where('sacco_id', $saccoB->id)->count());
