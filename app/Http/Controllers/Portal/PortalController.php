@@ -58,6 +58,7 @@ class PortalController extends Controller
 
         return view('portal.loans', [
             'member' => $member,
+            'canPayOnline' => app(PaymentGatewayManager::class)->isAvailableFor((int) $member->sacco_id),
             'loans' => $member->loans()->with('repayments')->get(),
         ]);
     }

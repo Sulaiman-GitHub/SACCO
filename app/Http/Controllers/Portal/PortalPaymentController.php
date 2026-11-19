@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePaymentRequest;
+use App\Http\Requests\StoreRepaymentPaymentRequest;
+use App\Models\Loan;
 use App\Models\PaymentTransaction;
 use App\Services\Payments\PaymentGatewayException;
 use App\Services\Payments\PaymentGatewayManager;
@@ -41,16 +43,50 @@ class PortalPaymentController extends Controller
             return redirect()->route('portal.savings')->with('error', 'Online payments are not available for your SACCO yet. Please pay at the SACCO.');
         }
 
-        $amount = (float) $request->validated('amount');
+        return $this->startAndRedirect($request, $processor, PaymentTransaction::PURPOSE_DEPOSIT, (float) $request->validated('amount'), null);
+    }
+
+    public function createRepayment(Request $request, PaymentGatewayManager $gateways, string $loan): View|RedirectResponse
+    {
+        $member = $request->user('member');
+        $ownLoan = $this->ownLoan($request, $loan);
+
+        if (! $gateways->isAvailableFor((int) $member->sacco_id)) {
+            return redirect()->route('portal.loans')->with('error', 'Online payments are not available for your SACCO yet. Please pay at the SACCO.');
+        }
+
+        if (! $ownLoan->canAcceptRepayment()) {
+            return redirect()->route('portal.loans')->with('error', 'This loan has nothing left to pay.');
+        }
+
+        return view('portal.repayment', ['member' => $member, 'loan' => $ownLoan]);
+    }
+
+    public function storeRepayment(StoreRepaymentPaymentRequest $request, PaymentProcessor $processor, PaymentGatewayManager $gateways, string $loan): RedirectResponse
+    {
+        $member = $request->user('member');
+
+        if (! $gateways->isAvailableFor((int) $member->sacco_id)) {
+            return redirect()->route('portal.loans')->with('error', 'Online payments are not available for your SACCO yet. Please pay at the SACCO.');
+        }
+
+        // The amount was checked against the loan balance in the request; "pay everything" uses the server balance
+        return $this->startAndRedirect($request, $processor, PaymentTransaction::PURPOSE_REPAYMENT, $request->amountToCollect(), $request->loanModel());
+    }
+
+    private function startAndRedirect(StorePaymentRequest $request, PaymentProcessor $processor, string $purpose, float $amount, ?Loan $loan): RedirectResponse
+    {
+        $member = $request->user('member');
         $network = $request->validated('network');
 
         try {
             // One start at a time per member, and a double click reuses the payment just started
-            $payment = Cache::lock('payment-start:'.$member->id, 15)->block(5, function () use ($member, $amount, $network, $request, $processor) {
+            $payment = Cache::lock('payment-start:'.$member->id, 15)->block(5, function () use ($member, $amount, $network, $request, $processor, $purpose, $loan) {
                 $recent = PaymentTransaction::withoutTenantScope()
                     ->where('sacco_id', $member->sacco_id)
                     ->where('member_id', $member->id)
-                    ->where('purpose', PaymentTransaction::PURPOSE_DEPOSIT)
+                    ->where('purpose', $purpose)
+                    ->where('loan_id', $loan?->id)
                     ->where('network', $network)
                     ->where('amount', $amount)
                     ->where('status', 'pending')
@@ -59,13 +95,26 @@ class PortalPaymentController extends Controller
                     ->latest('id')
                     ->first();
 
-                return $recent ?? $processor->start($member, PaymentTransaction::PURPOSE_DEPOSIT, $amount, $network, $request->normalisedPhone());
+                return $recent ?? $processor->start($member, $purpose, $amount, $network, $request->normalisedPhone(), $loan?->id);
             });
         } catch (PaymentGatewayException|LockTimeoutException) {
             return back()->withInput()->with('error', 'We could not start the payment just now. Nothing was charged. Please try again in a moment.');
         }
 
         return redirect()->away($payment->checkout_url);
+    }
+
+    /**
+     * One of the signed-in member own loans, or a 404. The loan is never taken from anywhere else.
+     */
+    private function ownLoan(Request $request, string $loanId): Loan
+    {
+        $member = $request->user('member');
+
+        return Loan::withoutTenantScope()
+            ->where('sacco_id', $member->sacco_id)
+            ->where('member_id', $member->id)
+            ->findOrFail($loanId);
     }
 
     /**

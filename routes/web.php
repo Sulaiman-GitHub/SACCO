@@ -83,6 +83,8 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('/loans/request', [PortalLoanRequestController::class, 'store'])->middleware('throttle:5,1')->name('loan_requests.store');
         Route::get('/savings/deposit', [PortalPaymentController::class, 'createDeposit'])->name('deposits.create');
         Route::post('/savings/deposit', [PortalPaymentController::class, 'storeDeposit'])->middleware('throttle:portal-payments')->name('deposits.store');
+        Route::get('/loans/{loan}/pay', [PortalPaymentController::class, 'createRepayment'])->name('repayments.create');
+        Route::post('/loans/{loan}/pay', [PortalPaymentController::class, 'storeRepayment'])->middleware('throttle:portal-payments')->name('repayments.store');
         Route::get('/payments/{payment}', [PortalPaymentController::class, 'show'])->name('payments.show');
         Route::get('/payments/{payment}/status', [PortalPaymentController::class, 'status'])->name('payments.status');
         Route::get('/consent', [PortalController::class, 'consent'])->name('consent');

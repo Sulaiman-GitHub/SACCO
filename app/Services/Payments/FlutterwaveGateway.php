@@ -45,7 +45,7 @@ class FlutterwaveGateway implements PaymentGateway
     {
         $body = [
             'tx_ref' => $payment->tx_ref,
-            'amount' => (string) (int) round((float) $payment->amount),
+            'amount' => rtrim(rtrim(number_format((float) $payment->amount, 2, '.', ''), '0'), '.'),
             'currency' => $payment->currency,
             'redirect_url' => route('portal.payments.show', $payment),
             'payment_options' => $payment->network === 'card' ? 'card' : 'mobilemoneyuganda',

@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Models\Member;
 use App\Models\PaymentTransaction;
+use App\Models\Repayment;
 use App\Models\Saving;
 use App\Services\AuditTrail;
 use Carbon\Carbon;
@@ -201,6 +202,14 @@ class PaymentProcessor
                 'payment_method' => $payment->ledgerPaymentMethod(),
                 'payment_reference' => $reference,
                 'transaction_date' => Carbon::today()->toDateString(),
+                'notes' => 'Paid online ('.$payment->tx_ref.')',
+            ], (int) $payment->sacco_id, null),
+            PaymentTransaction::PURPOSE_REPAYMENT => Repayment::recordLocked([
+                'loan_id' => $payment->loan_id,
+                'amount' => (float) $payment->amount,
+                'payment_method' => $payment->ledgerPaymentMethod(),
+                'payment_reference' => $reference,
+                'repayment_date' => Carbon::today()->toDateString(),
                 'notes' => 'Paid online ('.$payment->tx_ref.')',
             ], (int) $payment->sacco_id, null),
             default => throw new PaymentGatewayException('Unsupported payment purpose.'),

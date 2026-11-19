@@ -280,12 +280,12 @@ class NoInternalLanguageTest extends TestCase
 
     public function test_member_portal_screens_contain_no_internal_language(): void
     {
-        $this->seedActivity();
+        $loan = $this->seedActivity();
         $this->member->forceFill(['portal_enabled' => true, 'portal_must_change_password' => false])->save();
         $this->actingAs($this->member->fresh(), 'member');
         Auth::shouldUse('web');
 
-        foreach ([route('portal.dashboard'), route('portal.savings'), route('portal.loans'), route('portal.loan_requests.create'), route('portal.deposits.create'), route('portal.payments.show', 'PAY-TEST-0'), route('portal.payments.show', 'PAY-TEST-1'), route('portal.payments.show', 'PAY-TEST-2'), route('portal.consent'), route('portal.password.edit')] as $url) {
+        foreach ([route('portal.dashboard'), route('portal.savings'), route('portal.loans'), route('portal.loan_requests.create'), route('portal.deposits.create'), route('portal.repayments.create', $loan->id), route('portal.payments.show', 'PAY-TEST-0'), route('portal.payments.show', 'PAY-TEST-1'), route('portal.payments.show', 'PAY-TEST-2'), route('portal.consent'), route('portal.password.edit')] as $url) {
             $this->assertCleanPage($url);
         }
     }

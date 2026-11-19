@@ -42,6 +42,10 @@
             </div>
         @endif
 
+        @if(($canPayOnline ?? false) && $loan->canAcceptRepayment())
+            <a href="{{ route('portal.repayments.create', $loan->id) }}" class="btn btn-brand-primary btn-block-mobile mb-3"><i class="bi bi-phone me-1"></i> Pay now</a>
+        @endif
+
         <div class="stat-title">Repayments</div>
         @if($loan->repayments->isNotEmpty())
             <ul class="txn-list d-md-none">

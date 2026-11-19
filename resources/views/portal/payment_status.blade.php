@@ -49,7 +49,7 @@
                 <li class="d-flex justify-content-between py-2"><span class="text-muted">Reference</span><span class="font-monospace">{{ $payment->tx_ref }}</span></li>
             </ul>
 
-            <a id="payment-done" href="{{ route('portal.savings') }}" class="btn btn-brand-primary btn-block-mobile mt-2" @if($open) hidden @endif>Back to my savings</a>
+            <a id="payment-done" href="{{ $payment->purpose === 'repayment' ? route('portal.loans') : route('portal.savings') }}" class="btn btn-brand-primary btn-block-mobile mt-2" @if($open) hidden @endif>{{ $payment->purpose === 'repayment' ? 'Back to my loans' : 'Back to my savings' }}</a>
             <div class="text-muted mt-3" style="font-size: 12px;"><i class="bi bi-lock me-1"></i>Secured by Flutterwave</div>
         </div>
     </div>
