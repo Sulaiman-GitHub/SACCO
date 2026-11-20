@@ -58,6 +58,24 @@ class TenantReportController extends Controller
     }
 
     /**
+     * Export online payments with fees and net amounts, optionally within a date range.
+     */
+    public function exportPayments(Request $request, PortfolioReportService $reports): StreamedResponse
+    {
+        $validated = $request->validate([
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'scope' => ['nullable', Rule::in(['received', 'all'])],
+        ]);
+
+        return $this->streamCsv(
+            'online-payments',
+            ['Date', 'Reference', 'Member No', 'Member', 'For', 'Loan Ref', 'Paid With', 'Status', 'Amount Paid (UGX)', 'Provider Fee (UGX)', 'Net To SACCO (UGX)', 'Provider Ref', 'Completed'],
+            $reports->paymentsExportRows($validated['start_date'] ?? null, $validated['end_date'] ?? null, ($validated['scope'] ?? 'received') === 'received')
+        );
+    }
+
+    /**
      * Stream rows as a CSV download.
      *
      * @param  list<string>  $headings

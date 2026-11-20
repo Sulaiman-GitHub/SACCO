@@ -53,7 +53,8 @@
                 <option value="cash" {{ $paymentMethod === 'cash' ? 'selected' : '' }}>Cash</option>
                 <option value="mtn_momo" {{ $paymentMethod === 'mtn_momo' ? 'selected' : '' }}>MTN MoMo</option>
                 <option value="airtel_money" {{ $paymentMethod === 'airtel_money' ? 'selected' : '' }}>Airtel Money</option>
-                <option value="bank_transfer" {{ $paymentMethod === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                <option value="mobile_money" {{ $paymentMethod === 'mobile_money' ? 'selected' : '' }}>Mobile money</option>
+                    <option value="bank_transfer" {{ $paymentMethod === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
                 <option value="other" {{ $paymentMethod === 'other' ? 'selected' : '' }}>Other</option>
             </select>
         </div>

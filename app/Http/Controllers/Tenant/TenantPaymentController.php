@@ -38,7 +38,18 @@ class TenantPaymentController extends Controller
             });
         }
 
+        // Totals for everything that matches the filters (not just this page), received payments only
+        $received = (clone $query)->where('status', 'successful');
+        $totals = [
+            'count' => (clone $received)->count(),
+            'gross' => (float) (clone $received)->sum('amount'),
+            'fees' => (float) (clone $received)->sum('fee'),
+            'withoutFee' => (clone $received)->whereNull('fee')->count(),
+        ];
+        $totals['net'] = round($totals['gross'] - $totals['fees'] - (float) (clone $received)->whereNull('fee')->sum('amount'), 2);
+
         return view('tenant.payments.index', [
+            'totals' => $totals,
             'payments' => $query->latest('id')->paginate(20)->withQueryString(),
             'status' => $status,
             'purpose' => $purpose,

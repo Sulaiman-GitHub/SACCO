@@ -173,6 +173,7 @@ Route::middleware(['auth', 'tenant_user'])->group(function () {
         Route::get('/', [TenantReportController::class, 'index'])->name('index');
         Route::get('/savings.csv', [TenantReportController::class, 'exportSavings'])->name('savings_csv');
         Route::get('/loans.csv', [TenantReportController::class, 'exportLoans'])->name('loans_csv');
+        Route::get('/payments.csv', [TenantReportController::class, 'exportPayments'])->name('payments_csv');
     });
 
     // Immutable audit trail (Module 8)

@@ -4,6 +4,43 @@
 @section('page_title', 'Online Payments')
 
 @section('content')
+{{-- Received payments matching the filters below: what members paid, what the provider kept, what reaches the SACCO --}}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-tile">
+            <div class="stat-title">Payments received</div>
+            <div class="stat-value">{{ number_format($totals['count']) }}</div>
+            <div class="stat-desc">Matching the filters below</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-tile">
+            <div class="stat-title">Paid by members</div>
+            <div class="stat-value">UGX {{ number_format($totals['gross'], 0) }}</div>
+            <div class="stat-desc">Credited to member accounts</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-tile">
+            <div class="stat-title">Provider fees</div>
+            <div class="stat-value" style="color: var(--color-risk-medium);">UGX {{ number_format($totals['fees'], 0) }}</div>
+            <div class="stat-desc">Kept by the payment provider</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-tile">
+            <div class="stat-title">Net to the SACCO</div>
+            <div class="stat-value" style="color: var(--color-teal);">UGX {{ number_format($totals['net'], 0) }}</div>
+            <div class="stat-desc">
+                @if($totals['withoutFee'] > 0)
+                    Leaves out {{ $totals['withoutFee'] }} payment(s) with no fee reported
+                @else
+                    Expected in the settlement account
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
 <div class="sacco-card mb-4 p-3">
     <form method="GET" action="{{ route('tenant.payments.index') }}" class="row g-2 align-items-center">
         <div class="col-md-5">
@@ -45,6 +82,8 @@
                     <th>Member</th>
                     <th>For</th>
                     <th class="text-end">Amount (UGX)</th>
+                    <th class="text-end">Fee (UGX)</th>
+                    <th class="text-end">Net (UGX)</th>
                     <th>Paid with</th>
                     <th>Reference</th>
                     <th>Status</th>
@@ -71,6 +110,8 @@
                             @endif
                         </td>
                         <td data-label="Amount (UGX)" class="text-end font-monospace fw-semibold">{{ number_format($payment->amount, 2) }}</td>
+                        <td data-label="Fee (UGX)" class="text-end font-monospace">{{ $payment->fee !== null ? number_format($payment->fee, 2) : '—' }}</td>
+                        <td data-label="Net (UGX)" class="text-end font-monospace">{{ $payment->isSuccessful() && $payment->netAmount() !== null ? number_format($payment->netAmount(), 2) : '—' }}</td>
                         <td data-label="Paid with">{{ $payment->networkLabel() }}</td>
                         <td data-label="Reference">
                             <div class="font-monospace" style="font-size: 11px;">{{ $payment->tx_ref }}</div>
@@ -93,7 +134,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td data-label="" colspan="7" class="text-center py-5 text-muted">No online payments yet.</td>
+                        <td data-label="" colspan="9" class="text-center py-5 text-muted">No online payments yet.</td>
                     </tr>
                 @endforelse
             </tbody>

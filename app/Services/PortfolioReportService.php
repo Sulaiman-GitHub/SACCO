@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Loan;
+use App\Models\PaymentTransaction;
 use App\Models\Saving;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -169,6 +170,46 @@ class PortfolioReportService
                 $saving->payment_method,
                 $saving->payment_reference ?? '',
                 $saving->recorder->name ?? '',
+            ];
+        }
+    }
+
+    /**
+     * Online payment rows for export, with the provider fee and the amount that reaches the SACCO.
+     *
+     * @return iterable<int, list<string|float|int|null>>
+     */
+    public function paymentsExportRows(?string $startDate, ?string $endDate, bool $receivedOnly): iterable
+    {
+        $query = PaymentTransaction::query()->with(['member', 'loan'])->orderBy('id');
+
+        if ($receivedOnly) {
+            $query->where('status', 'successful');
+        }
+
+        if (! empty($startDate)) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if (! empty($endDate)) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+
+        foreach ($query->lazy() as $payment) {
+            yield [
+                $payment->created_at->format('Y-m-d H:i'),
+                $payment->tx_ref,
+                $payment->member->member_number ?? '',
+                $payment->member->full_name ?? '',
+                $payment->purpose === 'repayment' ? 'Loan repayment' : 'Savings',
+                $payment->loan->loan_reference ?? '',
+                $payment->networkLabel(),
+                $payment->status,
+                (float) $payment->amount,
+                $payment->fee !== null ? (float) $payment->fee : '',
+                $payment->netAmount() ?? '',
+                $payment->provider_reference ?? '',
+                $payment->completed_at?->format('Y-m-d H:i') ?? '',
             ];
         }
     }
