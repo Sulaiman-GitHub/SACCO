@@ -50,11 +50,17 @@
 {{-- Search & Status Filter Box --}}
 <div class="sacco-card mb-4 p-3">
     <form method="GET" action="{{ route('tenant.loans.index') }}" class="row g-2 align-items-center">
-        <div class="col-md-5">
+        <div class="col-md-4">
             <div class="input-group input-group-sm">
                 <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
                 <input type="text" name="search" class="form-control" placeholder="Search reference, member name, phone, or guarantor..." value="{{ $search }}">
             </div>
+        </div>
+        <div class="col-md-2">
+            <select name="source" class="form-select form-select-sm" aria-label="Requested by">
+                <option value="">Any source</option>
+                <option value="member_portal" {{ ($source ?? '') === 'member_portal' ? 'selected' : '' }}>Member requests only</option>
+            </select>
         </div>
         <div class="col-md-3">
             <select name="status" class="form-select form-select-sm">
@@ -75,7 +81,7 @@
             <button type="submit" class="btn btn-sm btn-brand-dark px-3">
                 <i class="bi bi-funnel me-1"></i> Filter
             </button>
-            @if(!empty($search) || !empty($status))
+            @if(!empty($search) || !empty($status) || !empty($source))
                 <a href="{{ route('tenant.loans.index') }}" class="btn btn-sm btn-brand-outline">
                     <i class="bi bi-x-circle me-1"></i> Clear
                 </a>
@@ -111,6 +117,9 @@
                             <div class="text-muted" style="font-size: 11px;">
                                 Applied: {{ $loan->applied_at ? $loan->applied_at->format('d M Y') : '—' }}
                             </div>
+                            @if($loan->isMemberRequest())
+                                <span class="badge mt-1" style="background: #E8ECEF; color: var(--color-slate); border: 1px solid #D8DCE0;"><i class="bi bi-person-check me-1"></i>Member request</span>
+                            @endif
                         </td>
                         <td data-label="Borrower">
                             <div class="fw-semibold text-dark">{{ $loan->member->full_name ?? '—' }}</div>

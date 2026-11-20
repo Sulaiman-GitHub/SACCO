@@ -54,6 +54,26 @@
                     <label for="reject_on_past_default" class="form-check-label">Recommend rejection for members with a previous default (otherwise a guarantor is required)</label>
                 </div>
 
+                <hr>
+                <h3 style="font-size: 14px;">Pricing for loans requested by members</h3>
+                <p class="text-muted" style="font-size: 12px;">Members who request a loan from their own portal cannot choose a rate. Their request is priced with these values, and an officer can still reject or approve it. Loans entered by staff use the rate typed on the application.</p>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="default_interest_rate" class="form-label">Interest rate per year (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" class="form-control @error('default_interest_rate') is-invalid @enderror" id="default_interest_rate" name="default_interest_rate" value="{{ old('default_interest_rate', $policy->default_interest_rate) }}" required>
+                        @error('default_interest_rate') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label for="default_interest_calculation_type" class="form-label">Interest method</label>
+                        <select class="form-select @error('default_interest_calculation_type') is-invalid @enderror" id="default_interest_calculation_type" name="default_interest_calculation_type" required>
+                            @foreach(['flat' => 'Flat', 'simple' => 'Simple'] as $value => $label)
+                                <option value="{{ $value }}" @selected(old('default_interest_calculation_type', $policy->default_interest_calculation_type) === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('default_interest_calculation_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+
                 <div class="d-flex justify-content-end">
                     <button type="submit" class="btn btn-brand-primary px-4">Save Policy</button>
                 </div>

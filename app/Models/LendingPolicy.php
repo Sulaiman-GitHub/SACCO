@@ -26,6 +26,8 @@ class LendingPolicy extends Model
         'max_loan_to_savings_ratio',
         'min_tenure_months',
         'reject_on_past_default',
+        'default_interest_rate',
+        'default_interest_calculation_type',
     ];
 
     /**
@@ -39,6 +41,8 @@ class LendingPolicy extends Model
         'max_loan_to_savings_ratio' => 3.00,
         'min_tenure_months' => 3,
         'reject_on_past_default' => false,
+        'default_interest_rate' => 10.00,
+        'default_interest_calculation_type' => 'flat',
     ];
 
     /**
@@ -54,6 +58,7 @@ class LendingPolicy extends Model
             'max_loan_to_savings_ratio' => 'float',
             'min_tenure_months' => 'integer',
             'reject_on_past_default' => 'boolean',
+            'default_interest_rate' => 'float',
         ];
     }
 

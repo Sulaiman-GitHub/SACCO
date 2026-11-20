@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\StaffInvitationController;
 use App\Http\Controllers\Portal\PortalAuthController;
 use App\Http\Controllers\Portal\PortalController;
+use App\Http\Controllers\Portal\PortalLoanRequestController;
+use App\Http\Controllers\Portal\PortalPaymentController;
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
 use App\Http\Controllers\Tenant\TenantAuditLogController;
 use App\Http\Controllers\Tenant\TenantDashboardController;
@@ -12,10 +14,12 @@ use App\Http\Controllers\Tenant\TenantLendingPolicyController;
 use App\Http\Controllers\Tenant\TenantLoanController;
 use App\Http\Controllers\Tenant\TenantMemberController;
 use App\Http\Controllers\Tenant\TenantMemberPortalController;
+use App\Http\Controllers\Tenant\TenantPaymentController;
 use App\Http\Controllers\Tenant\TenantRepaymentController;
 use App\Http\Controllers\Tenant\TenantReportController;
 use App\Http\Controllers\Tenant\TenantSavingsController;
 use App\Http\Controllers\Tenant\TenantStaffController;
+use App\Http\Controllers\Webhooks\FlutterwaveWebhookController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -75,10 +79,21 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/', [PortalController::class, 'dashboard'])->name('dashboard');
         Route::get('/savings', [PortalController::class, 'savings'])->name('savings');
         Route::get('/loans', [PortalController::class, 'loans'])->name('loans');
+        Route::get('/loans/request', [PortalLoanRequestController::class, 'create'])->name('loan_requests.create');
+        Route::post('/loans/request', [PortalLoanRequestController::class, 'store'])->middleware('throttle:5,1')->name('loan_requests.store');
+        Route::get('/savings/deposit', [PortalPaymentController::class, 'createDeposit'])->name('deposits.create');
+        Route::post('/savings/deposit', [PortalPaymentController::class, 'storeDeposit'])->middleware('throttle:portal-payments')->name('deposits.store');
+        Route::get('/loans/{loan}/pay', [PortalPaymentController::class, 'createRepayment'])->name('repayments.create');
+        Route::post('/loans/{loan}/pay', [PortalPaymentController::class, 'storeRepayment'])->middleware('throttle:portal-payments')->name('repayments.store');
+        Route::get('/payments/{payment}', [PortalPaymentController::class, 'show'])->name('payments.show');
+        Route::get('/payments/{payment}/status', [PortalPaymentController::class, 'status'])->name('payments.status');
         Route::get('/consent', [PortalController::class, 'consent'])->name('consent');
         Route::post('/consent-requests', [PortalController::class, 'storeConsentRequest'])->name('consent_requests.store');
     });
 });
+
+// Payment provider callbacks: no session, no CSRF; authenticated by the signature header inside the controller
+Route::post('/webhooks/flutterwave/{sacco}', FlutterwaveWebhookController::class)->middleware('throttle:120,1')->name('webhooks.flutterwave');
 
 // Platform Super-Admin Routes
 Route::middleware(['auth', 'super_admin'])->prefix('super-admin')->name('super_admin.')->group(function () {
@@ -130,6 +145,9 @@ Route::middleware(['auth', 'tenant_user'])->group(function () {
         Route::post('/{loan}/reject', [TenantLoanController::class, 'reject'])->name('reject');
         Route::post('/{loan}/disburse', [TenantLoanController::class, 'disburse'])->name('disburse');
     });
+
+    // Online payments received through the member portal (read-only)
+    Route::get('/payments', [TenantPaymentController::class, 'index'])->name('tenant.payments.index');
 
     // Repayments Ledger (Module 4)
     Route::prefix('repayments')->name('tenant.repayments.')->group(function () {

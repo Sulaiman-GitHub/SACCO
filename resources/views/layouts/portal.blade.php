@@ -216,5 +216,6 @@
     </nav>
 @endif
 @include('partials.pwa-scripts')
+@stack('scripts')
 </body>
 </html>

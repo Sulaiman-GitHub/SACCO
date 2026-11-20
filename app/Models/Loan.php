@@ -34,6 +34,10 @@ class Loan extends Model
         'outstanding' => ['disbursed', 'overdue', 'defaulted'],
     ];
 
+    public const REQUESTED_VIA_STAFF = 'staff';
+
+    public const REQUESTED_VIA_PORTAL = 'member_portal';
+
     public const GRACE_PERIOD_DAYS = 30;
 
     /**
@@ -79,6 +83,7 @@ class Loan extends Model
         'decision',
         'decision_reason',
         'created_by',
+        'requested_via',
         'notes',
     ];
 
@@ -575,6 +580,16 @@ class Loan extends Model
         }
 
         return $query->where('status', $status);
+    }
+
+    public function isMemberRequest(): bool
+    {
+        return $this->requested_via === self::REQUESTED_VIA_PORTAL;
+    }
+
+    public function scopeMemberRequests(Builder $query): Builder
+    {
+        return $query->where('requested_via', self::REQUESTED_VIA_PORTAL);
     }
 
     public function scopeForMember(Builder $query, int $memberId): Builder

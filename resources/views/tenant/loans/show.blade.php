@@ -462,7 +462,7 @@
             <div class="timeline" style="font-size: 12px;">
                 <div class="mb-3">
                     <div class="fw-bold text-dark">1. Application Created</div>
-                    <div class="text-muted">By: {{ $loan->creator->name ?? 'Staff' }}</div>
+                    <div class="text-muted">By: {{ $loan->isMemberRequest() ? 'The member, from their portal' : ($loan->creator->name ?? 'Staff') }}</div>
                     <div class="text-muted">{{ $loan->created_at->format('d M Y, H:i') }}</div>
                 </div>
 

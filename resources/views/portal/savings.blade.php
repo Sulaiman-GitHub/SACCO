@@ -4,6 +4,12 @@
 @section('page_title', 'My savings')
 
 @section('content')
+@if($canPayOnline ?? false)
+<div class="mb-3">
+    <a href="{{ route('portal.deposits.create') }}" class="btn btn-brand-primary btn-block-mobile"><i class="bi bi-phone me-1"></i> Add savings</a>
+</div>
+@endif
+
 <div class="sacco-card">
     <div class="stat-title">Current balance</div>
     <div class="stat-value font-monospace" style="color: var(--color-teal);">UGX {{ number_format($member->savings_balance, 2) }}</div>

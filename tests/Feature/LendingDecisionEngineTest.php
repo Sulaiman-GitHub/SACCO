@@ -162,6 +162,8 @@ class LendingDecisionEngineTest extends TestCase
             'max_loan_to_savings_ratio' => 2.5,
             'min_tenure_months' => 6,
             'reject_on_past_default' => 1,
+            'default_interest_rate' => 12.5,
+            'default_interest_calculation_type' => 'flat',
         ];
 
         $this->actingAs($officer)->put(route('tenant.lending_policy.update'), $payload)->assertForbidden();

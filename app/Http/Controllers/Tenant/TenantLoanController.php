@@ -6,15 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DisburseLoanRequest;
 use App\Http\Requests\RejectLoanRequest;
 use App\Http\Requests\StoreLoanRequest;
-use App\Models\LendingPolicy;
 use App\Models\Loan;
 use App\Models\Member;
 use App\Services\CreditRiskScoringService;
-use App\Services\LendingDecisionEngine;
+use App\Services\LoanApplicationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use InvalidArgumentException;
 
@@ -28,6 +26,7 @@ class TenantLoanController extends Controller
         $search = $request->query('search');
         $status = $request->query('status');
         $memberId = $request->query('member_id');
+        $source = $request->query('source');
 
         $query = Loan::query()->with(['member', 'creator']);
 
@@ -37,6 +36,10 @@ class TenantLoanController extends Controller
 
         if (! empty($status) && $status !== 'all') {
             $query->status($status);
+        }
+
+        if ($source === 'member_portal') {
+            $query->memberRequests();
         }
 
         if (! empty($memberId)) {
@@ -65,6 +68,7 @@ class TenantLoanController extends Controller
             'loans',
             'search',
             'status',
+            'source',
             'totalDisbursed',
             'activeLoansCount',
             'overdueLoansCount',
@@ -102,63 +106,13 @@ class TenantLoanController extends Controller
     /**
      * Store a newly created loan application in storage.
      */
-    public function store(StoreLoanRequest $request, CreditRiskScoringService $scoringService, LendingDecisionEngine $decisionEngine): RedirectResponse
+    public function store(StoreLoanRequest $request, LoanApplicationService $applications): RedirectResponse
     {
         $validated = $request->validated();
-        $saccoId = (int) Auth::user()->sacco_id;
 
-        $principal = (float) $validated['principal'];
-        $rate = (float) $validated['interest_rate'];
-        $termMonths = (int) $validated['term_months'];
-        $calcType = $validated['interest_calculation_type'];
+        $member = Member::findOrFail($validated['member_id']);
 
-        $interest = Loan::calculateInterest($principal, $rate, $termMonths, $calcType);
-        $totalAmount = round($principal + $interest, 2);
-
-        $member = Member::find($validated['member_id']);
-        $riskScore = null;
-        $ruling = ['decision' => null, 'reason' => null];
-        if ($member && ! $member->canBeScored()) {
-            // Not being scored never blocks borrowing: the loan goes to an officer without a score
-            $ruling['reason'] = $member->hasDeclinedScoring()
-                ? 'Member declined credit scoring. No risk score was calculated; decide on the application manually.'
-                : 'No consent record for this member. No risk score was calculated; record consent on the member profile, or decide on the application manually.';
-        } elseif ($member) {
-            $riskAssessment = $scoringService->scoreMember($member, $principal);
-            $riskScore = $riskAssessment['risk_score'] ?? null;
-            $ruling = $decisionEngine->decide(
-                $riskAssessment,
-                LendingPolicy::resolveFor($saccoId),
-                ! empty($validated['guarantor_name'])
-            );
-        }
-
-        $loan = DB::transaction(function () use ($validated, $saccoId, $principal, $rate, $termMonths, $calcType, $interest, $totalAmount, $riskScore, $ruling) {
-            $reference = Loan::generateReference($saccoId);
-
-            return Loan::create([
-                'sacco_id' => $saccoId,
-                'member_id' => $validated['member_id'],
-                'loan_reference' => $reference,
-                'principal' => $principal,
-                'interest_rate' => $rate,
-                'interest_calculation_type' => $calcType,
-                'term_months' => $termMonths,
-                'total_interest' => $interest,
-                'total_amount' => $totalAmount,
-                'purpose' => $validated['purpose'] ?? null,
-                'status' => 'pending',
-                'applied_at' => $validated['applied_at'],
-                'guarantor_name' => $validated['guarantor_name'] ?? null,
-                'guarantor_phone' => $validated['guarantor_phone'] ?? null,
-                'guarantor_relationship' => $validated['guarantor_relationship'] ?? null,
-                'risk_score' => $riskScore,
-                'decision' => $ruling['decision'],
-                'decision_reason' => $ruling['reason'],
-                'created_by' => Auth::id(),
-                'notes' => $validated['notes'] ?? null,
-            ]);
-        });
+        $loan = $applications->create($member, $validated, Auth::id());
 
         return redirect()->route('tenant.loans.show', $loan)
             ->with('success', "Loan application {$loan->loan_reference} submitted successfully for UGX ".number_format($loan->principal, 2).'.');
