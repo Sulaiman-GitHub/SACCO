@@ -128,5 +128,28 @@
             </form>
         </div>
     </div>
+    <div class="col-md-6">
+        <div class="sacco-card mb-0 h-100">
+            <div class="sacco-card-header"><h2 style="font-size: 16px; margin: 0;">Export online payments (CSV)</h2></div>
+            <form method="GET" action="{{ route('tenant.reports.payments_csv') }}" class="row g-2 align-items-end">
+                <div class="col-sm-4">
+                    <label for="pay_start_date" class="form-label" style="font-size: 12px;">From</label>
+                    <input type="date" name="start_date" id="pay_start_date" class="form-control form-control-sm">
+                </div>
+                <div class="col-sm-4">
+                    <label for="pay_end_date" class="form-label" style="font-size: 12px;">To</label>
+                    <input type="date" name="end_date" id="pay_end_date" class="form-control form-control-sm">
+                </div>
+                <div class="col-sm-4">
+                    <label for="pay_scope" class="form-label" style="font-size: 12px;">Include</label>
+                    <select name="scope" id="pay_scope" class="form-select form-select-sm">
+                        <option value="received">Received only</option>
+                        <option value="all">All attempts</option>
+                    </select>
+                </div>
+                <div class="col-12"><button type="submit" class="btn btn-brand-primary btn-sm">Export</button> <span class="text-muted" style="font-size: 12px;">Shows each payment, the provider fee and what reaches the SACCO.</span></div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection

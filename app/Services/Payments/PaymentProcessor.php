@@ -161,6 +161,10 @@ class PaymentProcessor
                 return $locked;
             }
 
+            // The ledger row records how the member really paid, which can differ from what they picked on our form
+            $network = $this->actualNetwork($locked, $result);
+            $locked->network = $network;
+
             try {
                 $ledger = $this->recordInLedger($locked, $result);
             } catch (ValidationException $e) {
@@ -175,6 +179,7 @@ class PaymentProcessor
             }
 
             $locked->forceFill([
+                'network' => $network,
                 $ledger instanceof Saving ? 'saving_id' : 'repayment_id' => $ledger->getKey(),
                 'status' => 'successful',
                 'failure_reason' => null,
@@ -188,6 +193,25 @@ class PaymentProcessor
 
             return $locked;
         });
+    }
+
+    /**
+     * How the money really arrived, from the provider's own payment type. Mobile money keeps the MTN or
+     * Airtel choice when the member made one, because the provider does not say which network it was.
+     */
+    private function actualNetwork(PaymentTransaction $payment, VerificationResult $result): string
+    {
+        $type = strtolower((string) ($result->sanitized['payment_type'] ?? ''));
+
+        if (str_contains($type, 'mobilemoney')) {
+            return in_array($payment->network, ['mtn', 'airtel'], true) ? $payment->network : 'momo';
+        }
+
+        if (str_contains($type, 'card')) {
+            return 'card';
+        }
+
+        return $payment->network;
     }
 
     private function recordInLedger(PaymentTransaction $payment, VerificationResult $result): Model

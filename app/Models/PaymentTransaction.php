@@ -87,6 +87,7 @@ class PaymentTransaction extends Model
         return match ($this->network) {
             'mtn' => 'mtn_momo',
             'airtel' => 'airtel_money',
+            'momo' => 'mobile_money',
             default => 'other',
         };
     }
@@ -96,7 +97,17 @@ class PaymentTransaction extends Model
         return match ($this->network) {
             'mtn' => 'MTN Mobile Money',
             'airtel' => 'Airtel Money',
+            'momo' => 'Mobile money',
             default => 'Card',
         };
+    }
+
+    /**
+     * What reaches the SACCO's settlement account for this payment: the amount minus the provider fee.
+     * Null when the provider did not report a fee, because the net cannot be known then.
+     */
+    public function netAmount(): ?float
+    {
+        return $this->fee === null ? null : round((float) $this->amount - (float) $this->fee, 2);
     }
 }
