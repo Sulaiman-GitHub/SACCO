@@ -162,6 +162,25 @@ class Saving extends Model
                         'amount' => 'The minimum withdrawal is UGX '.number_format(self::MINIMUM_AMOUNT).', unless you are withdrawing the member\'s full balance of UGX '.number_format($balance, 2).'.',
                     ]);
                 }
+
+                // The SACCO's loan rule and daily limit apply to every withdrawal, at the counter or paid out
+                // from a member request. Notice and the security hold are checked on member requests only.
+                $policy = WithdrawalPolicy::resolveFor($saccoId);
+                $coverError = $policy->loanCoverError($member, $amount, $balance);
+                if ($coverError !== null) {
+                    throw ValidationException::withMessages(['amount' => $coverError]);
+                }
+
+                $alreadyToday = (float) static::withoutTenantScope()
+                    ->where('sacco_id', $saccoId)
+                    ->where('member_id', $member->id)
+                    ->where('type', 'withdrawal')
+                    ->whereDate('transaction_date', $data['transaction_date'])
+                    ->sum('amount');
+                $limitError = $policy->dailyLimitError($amount, $alreadyToday);
+                if ($limitError !== null) {
+                    throw ValidationException::withMessages(['amount' => $limitError]);
+                }
             } elseif ($amount < self::MINIMUM_AMOUNT) {
                 throw ValidationException::withMessages([
                     'amount' => 'The minimum deposit is UGX '.number_format(self::MINIMUM_AMOUNT).'.',

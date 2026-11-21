@@ -617,6 +617,15 @@
                     <a href="{{ route('tenant.payments.index') }}" class="nav-link-custom {{ request()->routeIs('tenant.payments.*') ? 'active' : '' }}">
                         <i class="bi bi-phone"></i> Online Payments
                     </a>
+                    @php
+                        $pendingWithdrawals = \App\Models\WithdrawalRequest::where('status', 'pending')->count();
+                    @endphp
+                    <a href="{{ route('tenant.withdrawals.index') }}" class="nav-link-custom {{ request()->routeIs('tenant.withdrawals.*') ? 'active' : '' }}">
+                        <i class="bi bi-box-arrow-up"></i> Withdrawal Requests
+                        @if($pendingWithdrawals > 0)
+                            <span class="badge rounded-pill ms-auto" style="background: var(--color-green-start); color: #fff;" aria-label="{{ $pendingWithdrawals }} waiting for review">{{ $pendingWithdrawals }}</span>
+                        @endif
+                    </a>
                     @if(Auth::user()->isSaccoAdmin())
                         <a href="{{ route('tenant.staff.index') }}" class="nav-link-custom {{ request()->routeIs('tenant.staff.*') ? 'active' : '' }}">
                             <i class="bi bi-people"></i> Staff & Users
@@ -629,6 +638,9 @@
                         </a>
                         <a href="{{ route('tenant.lending_policy.edit') }}" class="nav-link-custom {{ request()->routeIs('tenant.lending_policy.*') ? 'active' : '' }}">
                             <i class="bi bi-sliders"></i> Lending Policy
+                        </a>
+                        <a href="{{ route('tenant.withdrawal_policy.edit') }}" class="nav-link-custom {{ request()->routeIs('tenant.withdrawal_policy.*') ? 'active' : '' }}">
+                            <i class="bi bi-safe"></i> Withdrawal Rules
                         </a>
                     @endif
                 @endif

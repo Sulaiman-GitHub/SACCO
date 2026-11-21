@@ -11,6 +11,7 @@ use App\Models\Sacco;
 use App\Models\SaccoPaymentSetting;
 use App\Models\Saving;
 use App\Models\User;
+use App\Models\WithdrawalRequest;
 use App\Notifications\StaffInvitationNotification;
 use App\Notifications\StaffPasswordResetNotification;
 use App\Services\StaffInvitations;
@@ -107,6 +108,14 @@ class NoInternalLanguageTest extends TestCase
         }
     }
 
+    private function makeWithdrawalRequest(): WithdrawalRequest
+    {
+        return WithdrawalRequest::withoutTenantScope()->create([
+            'sacco_id' => $this->sacco->id, 'member_id' => $this->member->id, 'reference' => 'WDR-TEST-00001', 'amount' => 50000, 'net_amount' => 50000,
+            'destination_phone' => '+256772123456', 'available_from' => now()->toDateString(),
+        ]);
+    }
+
     /**
      * Give the SACCO enough data that every card, table and state on the staff screens renders.
      */
@@ -157,6 +166,7 @@ class NoInternalLanguageTest extends TestCase
     public function test_staff_screens_contain_no_internal_language(): void
     {
         $loan = $this->seedActivity();
+        $withdrawalRequest = $this->makeWithdrawalRequest();
 
         $this->actingAs($this->admin);
 
@@ -181,6 +191,9 @@ class NoInternalLanguageTest extends TestCase
             route('tenant.reports.index'),
             route('tenant.audit_log.index'),
             route('tenant.lending_policy.edit'),
+            route('tenant.withdrawal_policy.edit'),
+            route('tenant.withdrawals.index'),
+            route('tenant.withdrawals.show', $withdrawalRequest),
         ] as $url) {
             $this->assertCleanPage($url);
         }
@@ -281,11 +294,12 @@ class NoInternalLanguageTest extends TestCase
     public function test_member_portal_screens_contain_no_internal_language(): void
     {
         $loan = $this->seedActivity();
+        $withdrawalRequest = $this->makeWithdrawalRequest();
         $this->member->forceFill(['portal_enabled' => true, 'portal_must_change_password' => false])->save();
         $this->actingAs($this->member->fresh(), 'member');
         Auth::shouldUse('web');
 
-        foreach ([route('portal.dashboard'), route('portal.savings'), route('portal.loans'), route('portal.loan_requests.create'), route('portal.deposits.create'), route('portal.repayments.create', $loan->id), route('portal.payments.show', 'PAY-TEST-0'), route('portal.payments.show', 'PAY-TEST-1'), route('portal.payments.show', 'PAY-TEST-2'), route('portal.consent'), route('portal.password.edit')] as $url) {
+        foreach ([route('portal.dashboard'), route('portal.savings'), route('portal.loans'), route('portal.loan_requests.create'), route('portal.deposits.create'), route('portal.repayments.create', $loan->id), route('portal.payments.show', 'PAY-TEST-0'), route('portal.payments.show', 'PAY-TEST-1'), route('portal.payments.show', 'PAY-TEST-2'), route('portal.consent'), route('portal.password.edit'), route('portal.withdrawals.create'), route('portal.withdrawals.index'), route('portal.withdrawals.show', $withdrawalRequest->id)] as $url) {
             $this->assertCleanPage($url);
         }
     }

@@ -94,6 +94,13 @@ class AuditLog extends Model
         'staff.temporary_password_set' => 'Temporary password set for staff member',
         'staff.password_reset_requested' => 'Staff password reset requested',
         'staff.password_reset_completed' => 'Staff password reset completed',
+        'withdrawal_policy.updated' => 'Withdrawal rules updated',
+        'withdrawal.requested' => 'Member asked to withdraw savings',
+        'withdrawal.cancelled' => 'Withdrawal request cancelled',
+        'withdrawal.expired' => 'Withdrawal request expired',
+        'withdrawal.approved' => 'Withdrawal request approved',
+        'withdrawal.rejected' => 'Withdrawal request rejected',
+        'withdrawal.paid' => 'Withdrawal paid out',
     ];
 
     /**
@@ -108,6 +115,8 @@ class AuditLog extends Model
         'Loan' => 'Loan',
         'Member' => 'Member',
         'LendingPolicy' => 'Lending policy',
+        'WithdrawalPolicy' => 'Withdrawal rules',
+        'WithdrawalRequest' => 'Withdrawal request',
         'ConsentChangeRequest' => 'Consent request',
         'User' => 'Staff member',
     ];
@@ -146,6 +155,14 @@ class AuditLog extends Model
         'changed_by' => 'Changed by',
         'requested_by' => 'Requested by',
         'request_type' => 'Request',
+        'fee' => 'Early withdrawal fee (UGX)',
+        'net' => 'Amount paid to the member (UGX)',
+        'early' => 'Early withdrawal',
+        'available_from' => 'Available from',
+        'payout_method' => 'Paid by',
+        'payout_reference' => 'Payout reference',
+        'request_reference' => 'Withdrawal request',
+        'savings_reference' => 'Savings transaction',
     ];
 
     /**
@@ -161,6 +178,14 @@ class AuditLog extends Model
         'reject_on_past_default' => 'Reject on a previous default',
         'default_interest_rate' => 'Interest rate for member requests (%)',
         'default_interest_calculation_type' => 'Interest method for member requests',
+        'notice_days' => 'Notice before a withdrawal (days)',
+        'loan_cover_mode' => 'Rule while a loan is outstanding',
+        'early_withdrawal_fee_percent' => 'Early withdrawal fee (%)',
+        'daily_limit_per_member' => 'Daily limit per member (UGX)',
+        'admin_approval_threshold' => 'Administrator approves above (UGX)',
+        'security_hold_days' => 'Hold after a password or phone change (days)',
+        'request_expiry_days' => 'Days before an unpaid request expires',
+        'payer_must_differ_from_approver' => 'Who may pay out a request they approved',
     ];
 
     /**
@@ -204,7 +229,7 @@ class AuditLog extends Model
             if ($key === 'changes' && is_array($value)) {
                 foreach ($value as $field => $pair) {
                     $label = self::POLICY_FIELD_LABELS[$field] ?? ucfirst(str_replace('_', ' ', $field));
-                    $rows[] = ['label' => $label, 'value' => $this->plainValue($pair[0] ?? null).' to '.$this->plainValue($pair[1] ?? null)];
+                    $rows[] = ['label' => $label, 'value' => $this->plainValue($pair[0] ?? null, $field).' to '.$this->plainValue($pair[1] ?? null, $field)];
                 }
 
                 continue;
@@ -248,7 +273,15 @@ class AuditLog extends Model
             return 'the member (portal)';
         }
 
-        if (in_array($key, ['payment_method', 'method'], true)) {
+        if ($key === 'loan_cover_mode') {
+            return WithdrawalPolicy::COVER_MODE_LABELS[$value] ?? str_replace('_', ' ', (string) $value);
+        }
+
+        if ($key === 'payer_must_differ_from_approver') {
+            return WithdrawalPolicy::PAYER_RULE_LABELS[$value] ?? str_replace('_', ' ', (string) $value);
+        }
+
+        if (in_array($key, ['payment_method', 'method', 'payout_method'], true)) {
             return ucwords(str_replace('_', ' ', (string) $value));
         }
 

@@ -391,14 +391,22 @@ class Loan extends Model
         Carbon|string $disbursementDate,
         ?string $notes = null
     ): bool {
-        if (! $this->canBeDisbursed()) {
-            throw new InvalidArgumentException("Loan cannot be disbursed from '{$this->status}' status.");
-        }
-
         $disbursedCarbon = is_string($disbursementDate) ? Carbon::parse($disbursementDate) : $disbursementDate;
-        $dueDate = (clone $disbursedCarbon)->addMonths((int) $this->term_months);
 
-        DB::transaction(function () use ($disburser, $paymentMethod, $paymentReference, $disbursedCarbon, $dueDate, $notes) {
+        DB::transaction(function () use ($disburser, $paymentMethod, $paymentReference, $disbursedCarbon, $notes) {
+            // Lock order: member row first (the same row Saving::recordLocked() locks), then the loan row.
+            // A savings payout and a disbursement for one member therefore queue behind each other.
+            Member::withoutTenantScope()->where('sacco_id', $this->sacco_id)->lockForUpdate()->findOrFail($this->member_id);
+
+            $locked = static::withoutTenantScope()->where('sacco_id', $this->sacco_id)->lockForUpdate()->findOrFail($this->id);
+            $this->setRawAttributes($locked->getAttributes(), true);
+
+            if (! $this->canBeDisbursed()) {
+                throw new InvalidArgumentException("Loan cannot be disbursed from '{$this->status}' status.");
+            }
+
+            $dueDate = (clone $disbursedCarbon)->addMonths((int) $this->term_months);
+
             $this->update([
                 'status' => 'disbursed',
                 'disbursed_at' => $disbursedCarbon,

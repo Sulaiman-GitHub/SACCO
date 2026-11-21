@@ -193,6 +193,13 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert" style="border-radius: 4px; border: 1px solid #C4432E; background: #FDF1F0; color: #8C2212;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div>{{ session('error') }}</div>
+        </div>
+    @endif
+
     @if($errors->any())
         <div class="alert alert-danger mb-4" role="alert" style="border-radius: 4px; border: 1px solid #C4432E; background: #FDF1F0; color: #8C2212;">
             <ul class="mb-0 ps-3">

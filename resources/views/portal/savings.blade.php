@@ -4,11 +4,13 @@
 @section('page_title', 'My savings')
 
 @section('content')
-@if($canPayOnline ?? false)
-<div class="mb-3">
-    <a href="{{ route('portal.deposits.create') }}" class="btn btn-brand-primary btn-block-mobile"><i class="bi bi-phone me-1"></i> Add savings</a>
+<div class="mb-3 d-flex gap-2 flex-wrap">
+    @if($canPayOnline ?? false)
+        <a href="{{ route('portal.deposits.create') }}" class="btn btn-brand-primary btn-block-mobile"><i class="bi bi-phone me-1"></i> Add savings</a>
+    @endif
+    <a href="{{ route('portal.withdrawals.create') }}" class="btn btn-brand-outline btn-block-mobile"><i class="bi bi-box-arrow-up me-1"></i> Withdraw savings</a>
+    <a href="{{ route('portal.withdrawals.index') }}" class="btn btn-brand-outline btn-block-mobile">My withdrawal requests</a>
 </div>
-@endif
 
 <div class="sacco-card">
     <div class="stat-title">Current balance</div>
