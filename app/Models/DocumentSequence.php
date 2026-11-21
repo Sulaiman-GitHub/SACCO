@@ -22,6 +22,7 @@ class DocumentSequence extends Model
         'loan' => Loan::class,
         'saving' => Saving::class,
         'repayment' => Repayment::class,
+        'withdrawal_request' => WithdrawalRequest::class,
     ];
 
     protected $fillable = ['sacco_id', 'name', 'last_value'];

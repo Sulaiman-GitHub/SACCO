@@ -7,6 +7,7 @@ use App\Http\Controllers\Portal\PortalAuthController;
 use App\Http\Controllers\Portal\PortalController;
 use App\Http\Controllers\Portal\PortalLoanRequestController;
 use App\Http\Controllers\Portal\PortalPaymentController;
+use App\Http\Controllers\Portal\PortalWithdrawalController;
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
 use App\Http\Controllers\Tenant\TenantAuditLogController;
 use App\Http\Controllers\Tenant\TenantDashboardController;
@@ -19,6 +20,8 @@ use App\Http\Controllers\Tenant\TenantRepaymentController;
 use App\Http\Controllers\Tenant\TenantReportController;
 use App\Http\Controllers\Tenant\TenantSavingsController;
 use App\Http\Controllers\Tenant\TenantStaffController;
+use App\Http\Controllers\Tenant\TenantWithdrawalPolicyController;
+use App\Http\Controllers\Tenant\TenantWithdrawalRequestController;
 use App\Http\Controllers\Webhooks\FlutterwaveWebhookController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -85,6 +88,11 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('/savings/deposit', [PortalPaymentController::class, 'storeDeposit'])->middleware('throttle:portal-payments')->name('deposits.store');
         Route::get('/loans/{loan}/pay', [PortalPaymentController::class, 'createRepayment'])->name('repayments.create');
         Route::post('/loans/{loan}/pay', [PortalPaymentController::class, 'storeRepayment'])->middleware('throttle:portal-payments')->name('repayments.store');
+        Route::get('/savings/withdraw', [PortalWithdrawalController::class, 'create'])->name('withdrawals.create');
+        Route::post('/savings/withdraw', [PortalWithdrawalController::class, 'store'])->middleware('throttle:portal-withdrawals')->name('withdrawals.store');
+        Route::get('/savings/withdrawals', [PortalWithdrawalController::class, 'index'])->name('withdrawals.index');
+        Route::get('/savings/withdrawals/{withdrawal}', [PortalWithdrawalController::class, 'show'])->name('withdrawals.show');
+        Route::post('/savings/withdrawals/{withdrawal}/cancel', [PortalWithdrawalController::class, 'cancel'])->middleware('throttle:portal-withdrawals')->name('withdrawals.cancel');
         Route::get('/payments/{payment}', [PortalPaymentController::class, 'show'])->name('payments.show');
         Route::get('/payments/{payment}/status', [PortalPaymentController::class, 'status'])->name('payments.status');
         Route::get('/consent', [PortalController::class, 'consent'])->name('consent');
@@ -149,6 +157,15 @@ Route::middleware(['auth', 'tenant_user'])->group(function () {
     // Online payments received through the member portal (read-only)
     Route::get('/payments', [TenantPaymentController::class, 'index'])->name('tenant.payments.index');
 
+    // Savings withdrawal requests from the member portal: review, approve or reject, record the manual payout
+    Route::prefix('withdrawals')->name('tenant.withdrawals.')->group(function () {
+        Route::get('/', [TenantWithdrawalRequestController::class, 'index'])->name('index');
+        Route::get('/{withdrawal}', [TenantWithdrawalRequestController::class, 'show'])->name('show');
+        Route::post('/{withdrawal}/approve', [TenantWithdrawalRequestController::class, 'approve'])->name('approve');
+        Route::post('/{withdrawal}/reject', [TenantWithdrawalRequestController::class, 'reject'])->name('reject');
+        Route::post('/{withdrawal}/pay', [TenantWithdrawalRequestController::class, 'pay'])->name('pay');
+    });
+
     // Repayments Ledger (Module 4)
     Route::prefix('repayments')->name('tenant.repayments.')->group(function () {
         Route::get('/', [TenantRepaymentController::class, 'index'])->name('index');
@@ -186,5 +203,11 @@ Route::middleware(['auth', 'tenant_user'])->group(function () {
     Route::middleware('sacco_admin')->prefix('settings/lending-policy')->name('tenant.lending_policy.')->group(function () {
         Route::get('/', [TenantLendingPolicyController::class, 'edit'])->name('edit');
         Route::put('/', [TenantLendingPolicyController::class, 'update'])->name('update');
+    });
+
+    // Savings withdrawal rules, edited by SACCO admins only
+    Route::middleware('sacco_admin')->prefix('settings/withdrawal-rules')->name('tenant.withdrawal_policy.')->group(function () {
+        Route::get('/', [TenantWithdrawalPolicyController::class, 'edit'])->name('edit');
+        Route::put('/', [TenantWithdrawalPolicyController::class, 'update'])->name('update');
     });
 });

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\AuditTrail;
+use App\Support\UgandaPhone;
 use App\Traits\BelongsToTenant;
 use Carbon\Carbon;
 use Database\Factories\MemberFactory;
@@ -82,7 +83,33 @@ class Member extends Authenticatable
             'portal_enabled' => 'boolean',
             'portal_must_change_password' => 'boolean',
             'portal_last_login_at' => 'datetime',
+            'portal_password_changed_at' => 'datetime',
+            'phone_changed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Boot model: remember when the registered phone number really changed (a reformatted number
+     * does not count). The password timestamp is set in the portal methods below, not here, so a
+     * silent re-hash at sign-in can never start a security hold.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (Member $member) {
+            if (! $member->isDirty('phone')) {
+                return;
+            }
+
+            $old = $member->getOriginal('phone');
+            $oldNormal = UgandaPhone::normalise($old);
+            $newNormal = UgandaPhone::normalise($member->phone);
+
+            $changed = ($oldNormal === null || $newNormal === null) ? $old !== $member->phone : $oldNormal !== $newNormal;
+
+            if ($changed) {
+                $member->phone_changed_at = Carbon::now();
+            }
+        });
     }
 
     /**
@@ -111,6 +138,7 @@ class Member extends Authenticatable
                 'password' => Hash::make($temporaryPassword),
                 'portal_enabled' => true,
                 'portal_must_change_password' => true,
+                'portal_password_changed_at' => Carbon::now(),
             ])->save();
 
             app(AuditTrail::class)->record('member.portal_credentials_issued', $this, [
@@ -145,6 +173,7 @@ class Member extends Authenticatable
             $this->forceFill([
                 'password' => Hash::make($newPassword),
                 'portal_must_change_password' => false,
+                'portal_password_changed_at' => Carbon::now(),
             ])->save();
 
             app(AuditTrail::class)->record('member.portal_password_changed', $this, [

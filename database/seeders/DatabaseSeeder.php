@@ -6,6 +6,7 @@ use App\Models\Member;
 use App\Models\Sacco;
 use App\Models\Saving;
 use App\Models\User;
+use App\Models\WithdrawalPolicy;
 use Database\Factories\MemberFactory;
 use Database\Factories\SavingFactory;
 use Illuminate\Database\Seeder;
@@ -115,6 +116,13 @@ class DatabaseSeeder extends Seeder
 
         if (Member::withoutTenantScope()->where('sacco_id', $sacco2->id)->count() === 0) {
             $this->seedConsentedMembers($sacco2, $admin2, 6);
+        }
+
+        // Demo withdrawal rules: no security hold, so a member created for a demo (whose portal password is set
+        // minutes earlier) can request a withdrawal straight away. firstOrCreate never overwrites rules an admin
+        // has already saved; for an existing row, set the hold to 0 on the Withdrawal Rules screen.
+        foreach ([$sacco1, $sacco2] as $demoSacco) {
+            WithdrawalPolicy::withoutTenantScope()->firstOrCreate(['sacco_id' => $demoSacco->id], ['security_hold_days' => 0]);
         }
 
         // 5. Seed sample savings transactions for SACCO members

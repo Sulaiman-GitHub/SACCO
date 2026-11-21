@@ -27,5 +27,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Starting a payment is limited per member, not per address (many members share one mobile network)
         RateLimiter::for('portal-payments', fn (Request $request) => Limit::perMinute(6)->by('member:'.($request->user('member')?->id ?? $request->ip())));
+
+        // Withdrawal requests and cancellations are limited per member too (wrong passwords have their own, stricter limit)
+        RateLimiter::for('portal-withdrawals', fn (Request $request) => Limit::perMinute(6)->by('withdrawals:'.($request->user('member')?->id ?? $request->ip())));
     }
 }

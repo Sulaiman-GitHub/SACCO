@@ -544,6 +544,28 @@ class PortalPaymentsTest extends TestCase
         $this->assertSame(0, $this->savings());
     }
 
+    public function test_a_failed_payment_start_is_visible_to_the_member_in_the_portal_page(): void
+    {
+        $this->startFails = true;
+
+        $this->signInAsMember($this->member)->followingRedirects()
+            ->from(route('portal.deposits.create'))
+            ->post(route('portal.deposits.store'), ['amount' => 5000, 'network' => 'mtn', 'phone' => '0772123456'])
+            ->assertOk()
+            ->assertSee('We could not start the payment just now. Nothing was charged.')
+            ->assertSee('alert-danger', false);
+    }
+
+    public function test_a_payments_not_available_message_is_shown_on_the_savings_page(): void
+    {
+        SaccoPaymentSetting::withoutTenantScope()->where('sacco_id', $this->sacco->id)->update(['enabled' => false]);
+
+        $this->signInAsMember($this->member)->followingRedirects()
+            ->get(route('portal.deposits.create'))
+            ->assertOk()
+            ->assertSee('Online payments are not available for your SACCO yet.');
+    }
+
     public function test_staff_see_only_their_own_saccos_payments_and_cannot_change_them(): void
     {
         $payment = $this->startDeposit();
